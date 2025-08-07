@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Matt Shih — Robotics Portfolio</title>
+  <style>
+    /* Minimal page chrome, canvas fills viewport */
+    html,body{height:100%;margin:0;background:#0b0d10;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    #app{height:100%;display:flex;align-items:center;justify-content:center}
+    canvas{width:100vw;height:100vh;display:block}
+    /* Make text selectable on fallback elements if any */
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="cv"></canvas>
+  </div>
+
+<script>
+// Single-file Canvas app: modern terminal + keyboard-controlled 3-segment robotic arm demo
+// Author: Generated for Matt Shih
+
+const canvas = document.getElementById('cv');
+const ctx = canvas.getContext('2d');
+let DPR = window.devicePixelRatio || 1;
+function resize(){
+  DPR = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(window.innerWidth * DPR);
+  canvas.height = Math.floor(window.innerHeight * DPR);
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Style variables (sleek modern terminal)
+const theme = {
+  bg: '#0b0d10',
+  panel: '#0f1114',
+  accent: '#7ef5c7',
+  dim: '#98a0a6',
+  caret: '#b8ffe0',
+  text: '#e6f7f0',
+};
+
+// App state
+let mode = 'terminal'; // 'terminal' or 'arm'
+
+// Terminal state
+const term = {
+  lines: ["Welcome. Type 'help' and press Enter."],
+  input: '',
+  history: [],
+  histCursor: -1,
+  prompt: 'matt@robotics:~$ ',
+  maxLines: 200,
+};
+
+function pushLine(line){
+  term.lines.push(line);
+  if(term.lines.length>term.maxLines) term.lines.shift();
+}
+
+// Projects / about placeholders
+const ABOUT_TEXT = [
+  "Matt Shih — CS student & robotics tinkerer.",
+  "I build perception pipelines, embedded control, and creative demos.",
+  "Keyboard: Arrow keys / WASD control the demo. Type 'arm-demo' to try it.",
+];
+const PROJECTS_TEXT = [
+  "- Rebottle — Android / Kotlin + Firebase: QR bottle tracking app",
+  "- Ouster LiDAR integration — ROS2 driver & RViz visualization",
+  "- CTF challenges — reverse/forensics/crypto practice",
+  "(Replace these entries with your own projects.)",
+];
+const EXPERIENCE_TEXT = [
+  "- Research Intern — Autonomy Lab (sensors & mapping)",
+  "- TA — Distributed Systems",
+  "- Robotics Club — Team lead for manipulation module",
+];
+
+// ==================== Robotic Arm Demo =====================
+// 3 segments, base at bottom-left-ish. Keyboard controls rotate joints.
+const arm = {
+  base: {x: 220, y: canvas.height/DPR - 140},
+  lengths: [140, 110, 70],
+  angles: [ -Math.PI/6, Math.PI/4, -Math.PI/8], // radians
+  angleSpeeds: [0,0,0],
+  grip: false,
+  held: null,
+};
+
+// One movable block and target zone
+let block = {x: 520, y: canvas.height/DPR - 200, size: 26, grabbed:false};
+let target = {x: canvas.width/DPR - 180, y: canvas.height/DPR - 160, w:80, h:80};
+
+// Controls mapping
+const controls = {
+  baseLeft: ['q'], // rotate base left
+  baseRight: ['e'],
+  joint0Left: ['ArrowLeft','a'],
+  joint0Right: ['ArrowRight','d'],
+  joint1Left: ['ArrowUp','w'],
+  joint1Right: ['ArrowDown','s'],
+  gripToggle: [' '], // space
+  reset: ['r']
+};
+const pressed = {};
+
+window.addEventListener('keydown', (ev)=>{
+  if(mode === 'terminal') handleTerminalKeyDown(ev);
+  else handleArmKeyDown(ev);
+});
+window.addEventListener('keyup', (ev)=>{
+  pressed[ev.key] = false;
+});
+
+// Terminal keyboard handling
+function handleTerminalKeyDown(ev){
+  if(ev.key === 'Backspace'){
+    term.input = term.input.slice(0,-1);
+    ev.preventDefault();
+  } else if(ev.key === 'Enter'){
+    const cmd = term.input.trim();
+    if(cmd.length>0){ term.history.push(cmd); term.histCursor = -1; }
+    pushLine(term.prompt + term.input);
+    processCommand(cmd);
+    term.input = '';
+    ev.preventDefault();
+  } else if(ev.key === 'ArrowUp'){
+    if(term.history.length>0){
+      if(term.histCursor < term.history.length-1) term.histCursor++;
+      term.input = term.history[term.history.length-1-term.histCursor] || '';
+    }
+    ev.preventDefault();
+  } else if(ev.key === 'ArrowDown'){
+    if(term.histCursor > 0){ term.histCursor--; term.input = term.history[term.history.length-1-term.histCursor]; }
+    else { term.histCursor = -1; term.input = ''; }
+    ev.preventDefault();
+  } else if(ev.key.length === 1){
+    // printable
+    term.input += ev.key;
+    ev.preventDefault();
+  } else if(ev.key === 'Tab'){
+    // simple autocomplete: 'a' -> about, 'p'->projects, 'x'->experience
+    ev.preventDefault();
+    const candidates = ['about','projects','experience','arm-demo','help','clear','resume'];
+    const match = candidates.find(c=>c.startsWith(term.input));
+    if(match) term.input = match;
+  }
+}
+
+function processCommand(cmd){
+  const c = cmd.toLowerCase();
+  if(c === '') { pushLine(''); return; }
+  if(c === 'help'){
+    pushLine("Available: help, about, projects, experience, arm-demo, resume, clear");
+    pushLine("Type 'arm-demo' to launch the robotic arm simulation.");
+    return;
+  }
+  if(c === 'about'){
+    ABOUT_TEXT.forEach(l=>pushLine(l));
+    return;
+  }
+  if(c === 'projects'){
+    PROJECTS_TEXT.forEach(l=>pushLine(l));
+    return;
+  }
+  if(c === 'experience'){
+    EXPERIENCE_TEXT.forEach(l=>pushLine(l));
+    return;
+  }
+  if(c === 'resume'){
+    pushLine('Resume: [placeholder] — add your resume URL in the HTML file.');
+    return;
+  }
+  if(c === 'clear'){
+    term.lines = [];
+    return;
+  }
+  if(c === 'arm-demo' || c === 'arm'){
+    pushLine('Switching to arm demo. Use Arrow keys or WASD to move joints. Space to toggle grip. Press `t` to return to terminal.');
+    mode = 'arm';
+    return;
+  }
+  if(c === 'theme'){
+    pushLine('Theme switching not implemented in this demo — edit CSS to customize.');
+    return;
+  }
+  pushLine("Unknown command: '"+cmd+"'. Type 'help' for commands.");
+}
+
+// Arm keyboard handling
+function handleArmKeyDown(ev){
+  pressed[ev.key] = true;
+  if(ev.key === 't'){
+    mode = 'terminal';
+    pushLine('Returned to terminal.');
+  }
+  // prevent page scrolling on arrows/space
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(ev.key)) ev.preventDefault();
+}
+
+// Utility: draw rounded rect
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+// Render loop
+let last = performance.now();
+function tick(now){
+  const dt = Math.min(0.05,(now-last)/1000);
+  last = now;
+  update(dt);
+  render();
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+function update(dt){
+  if(mode === 'arm'){
+    // read pressed keys and update angles
+    const speed = 1.8; // rad/s
+    // joint0: base rotation
+    if(pressed['ArrowLeft'] || pressed['a']) arm.angles[0] -= speed * dt;
+    if(pressed['ArrowRight']|| pressed['d']) arm.angles[0] += speed * dt;
+    // joint1: second joint
+    if(pressed['ArrowUp'] || pressed['w']) arm.angles[1] -= speed * dt;
+    if(pressed['ArrowDown']|| pressed['s']) arm.angles[1] += speed * dt;
+    // joint2: q/e
+    if(pressed['q']) arm.angles[2] -= speed * dt;
+    if(pressed['e']) arm.angles[2] += speed * dt;
+    // grip toggle
+    if(pressed[' '] && !arm._spaceLock){ arm.grip = !arm.grip; arm._spaceLock = true; }
+    if(!pressed[' ']) arm._spaceLock = false;
+    // reset
+    if(pressed['r']){
+      arm.angles = [-Math.PI/6, Math.PI/4, -Math.PI/8];
+      block = {x: 520, y: canvas.height/DPR - 200, size: 26, grabbed:false};
+    }
+    // enforce reasonable angle limits
+    arm.angles[1] = Math.max(-Math.PI*0.9, Math.min(Math.PI*0.9, arm.angles[1]));
+    arm.angles[2] = Math.max(-Math.PI*0.9, Math.min(Math.PI*0.9, arm.angles[2]));
+    // forward kinematics: compute end effector
+    const p0 = {x:arm.base.x, y:arm.base.y};
+    const a0 = arm.angles[0];
+    const p1 = {x: p0.x + Math.cos(a0)*arm.lengths[0], y: p0.y + Math.sin(a0)*arm.lengths[0]};
+    const a1 = a0 + arm.angles[1];
+    const p2 = {x: p1.x + Math.cos(a1)*arm.lengths[1], y: p1.y + Math.sin(a1)*arm.lengths[1]};
+    const a2 = a1 + arm.angles[2];
+    const gripPos = {x: p2.x + Math.cos(a2)*arm.lengths[2], y: p2.y + Math.sin(a2)*arm.lengths[2]};
+    arm._points = [p0,p1,p2,gripPos];
+    // interaction: if grip on and block near gripPos, attach
+    const dist = Math.hypot(block.x - gripPos.x, block.y - gripPos.y);
+    if(arm.grip && dist < 28 && !block.grabbed){ block.grabbed = true; arm.held = block; }
+    if(!arm.grip && block.grabbed){ block.grabbed = false; arm.held = null; }
+    if(block.grabbed && arm.held){ arm.held.x = gripPos.x; arm.held.y = gripPos.y; }
+    // check success
+    if(block.x > target.x && block.x < target.x+target.w && block.y > target.y && block.y < target.y+target.h){
+      // simple success: nudge target color or show message
+      arm._success = true;
+    } else arm._success = false;
+  }
+}
+
+function render(){
+  // clear
+  ctx.fillStyle = theme.bg;
+  ctx.fillRect(0,0,canvas.width/DPR,canvas.height/DPR);
+
+  // draw a centered panel card
+  const pad = 28;
+  const panelW = Math.min(1180, canvas.width/DPR - 80);
+  const panelH = Math.min(720, canvas.height/DPR - 80);
+  const panelX = (canvas.width/DPR - panelW)/2;
+  const panelY = (canvas.height/DPR - panelH)/2;
+
+  // panel background
+  ctx.fillStyle = theme.panel;
+  roundRect(panelX, panelY, panelW, panelH, 12);
+  ctx.fill();
+
+  if(mode === 'terminal'){
+    renderTerminal(panelX+24, panelY+24, panelW-48, panelH-48);
+  } else if(mode === 'arm'){
+    renderArmDemo(panelX+24, panelY+24, panelW-48, panelH-48);
+  }
+
+  // subtle footer: small hint
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.fillRect(panelX, panelY+panelH-38, panelW, 1);
+  ctx.fillStyle = theme.dim;
+  ctx.font = '12px Inter, ui-sans-serif, system-ui';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Type `help` in the terminal. Press `t` while in demo to return.', panelX+18, panelY+panelH-20);
+}
+
+function renderTerminal(x,y,w,h){
+  // terminal area: dark inner background
+  ctx.fillStyle = '#060708';
+  roundRect(x,y,w,h,8);
+  ctx.fill();
+
+  // Title row
+  ctx.font = '600 15px Inter, ui-sans-serif';
+  ctx.fillStyle = theme.accent;
+  ctx.fillText('matt.shih — interactive terminal', x+14, y+24);
+
+  // content area
+  const contentX = x+14;
+  let cursorY = y+48;
+  const lineHeight = 20;
+  ctx.font = '13px Inter, ui-sans-serif';
+  // draw previous lines
+  ctx.fillStyle = theme.text;
+  const maxShow = Math.floor((h-80)/lineHeight);
+  const start = Math.max(0, term.lines.length - maxShow);
+  for(let i=start;i<term.lines.length;i++){
+    const line = term.lines[i];
+    ctx.fillStyle = theme.dim;
+    ctx.fillText(line, contentX, cursorY);
+    cursorY += lineHeight;
+  }
+  // draw prompt + input
+  ctx.fillStyle = theme.accent;
+  ctx.fillText(term.prompt, contentX, cursorY);
+  const promptW = ctx.measureText(term.prompt).width;
+  ctx.fillStyle = theme.text;
+  // clip input to fit width
+  const inputText = term.input || '';
+  ctx.fillText(inputText, contentX+promptW, cursorY);
+  // caret
+  const caretX = contentX + promptW + ctx.measureText(inputText).width + 2;
+  const caretY = cursorY - 14;
+  ctx.fillStyle = theme.caret;
+  ctx.fillRect(caretX, caretY+2, 10, 14);
+
+  // small help column on the right inside panel
+  const miniX = x + w - 180;
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  roundRect(miniX-8, y+40, 162, h-80, 8);
+  ctx.fill();
+  ctx.fillStyle = theme.dim;
+  ctx.font = '12px Inter, ui-sans-serif';
+  ctx.fillText('Commands', miniX+6, y+60);
+  ctx.fillStyle = theme.text;
+  const cmds = ['about','projects','experience','arm-demo','resume','clear','help'];
+  for(let i=0;i<cmds.length;i++){
+    ctx.fillStyle = theme.dim;
+    ctx.fillText(cmds[i], miniX+10, y+86 + i*18);
+  }
+}
+
+function renderArmDemo(x,y,w,h){
+  // left: arm scene; right: HUD
+  const sceneW = Math.floor(w*0.62);
+  const hudX = x + sceneW + 16;
+  // scene bg
+  ctx.fillStyle = '#071017';
+  roundRect(x, y, sceneW-6, h, 8);
+  ctx.fill();
+
+  // ground
+  ctx.fillStyle = '#061217';
+  roundRect(x+6, y + h - 80, sceneW-18, 68, 8);
+  ctx.fill();
+
+  // draw target
+  ctx.fillStyle = arm._success ? '#7ef5c7' : 'rgba(126,245,199,0.2)';
+  roundRect(target.x-12, target.y-12, target.w+24, target.h+24, 8);
+  ctx.fill();
+  ctx.fillStyle = '#0c1214';
+  roundRect(target.x, target.y, target.w, target.h, 6);
+  ctx.fill();
+  ctx.fillStyle = theme.dim;
+  ctx.font = '12px Inter, ui-sans-serif';
+  ctx.fillText('Target', target.x+8, target.y+18);
+
+  // draw block
+  ctx.save();
+  ctx.translate(block.x, block.y);
+  ctx.rotate(0.06*Math.sin(performance.now()/300));
+  ctx.fillStyle = '#ffd68a';
+  roundRect(-block.size/2, -block.size/2, block.size, block.size, 4);
+  ctx.fill();
+  ctx.restore();
+
+  // draw arm using FK points
+  const pts = arm._points || [];
+  // draw segments
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#bfeee0';
+  if(pts.length){
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[1].x, pts[1].y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pts[1].x, pts[1].y); ctx.lineTo(pts[2].x, pts[2].y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pts[2].x, pts[2].y); ctx.lineTo(pts[3].x, pts[3].y); ctx.stroke();
+  }
+  // joints
+  for(let i=0;i<pts.length;i++){
+    ctx.beginPath(); ctx.fillStyle = '#0c1214'; roundRect(pts[i].x-10, pts[i].y-10, 20, 20, 6); ctx.fill();
+    ctx.beginPath(); ctx.strokeStyle = theme.accent; ctx.lineWidth = 2; ctx.arc(pts[i].x, pts[i].y, 12, 0, Math.PI*2); ctx.stroke();
+  }
+  // gripper
+  if(pts.length){
+    const g = pts[3];
+    const gripSize = arm.grip ? 18 : 8;
+    ctx.beginPath(); ctx.fillStyle = arm.grip ? '#7ef5c7' : '#98a0a6'; roundRect(g.x-gripSize/2, g.y-6, gripSize, 12, 4); ctx.fill();
+  }
+
+  // draw base
+  ctx.fillStyle = '#0f1416'; roundRect(arm.base.x-28, arm.base.y-6, 56, 36, 8); ctx.fill();
+
+  // HUD on right
+  ctx.fillStyle = '#061015'; roundRect(hudX-6, y, w-sceneW-8, h, 8); ctx.fill();
+  ctx.fillStyle = theme.accent; ctx.font = '600 15px Inter, ui-sans-serif'; ctx.fillText('Robotic Arm Demo', hudX+12, y+34);
+  ctx.fillStyle = theme.dim; ctx.font = '12px Inter, ui-sans-serif';
+  ctx.fillText('Controls:', hudX+12, y+64);
+  ctx.fillStyle = theme.text; ctx.fillText('Arrow keys / WASD — rotate joints', hudX+12, y+86);
+  ctx.fillText('Q / E — fine rotate end joint', hudX+12, y+106);
+  ctx.fillText('Space — toggle grip', hudX+12, y+126);
+  ctx.fillText('R — reset', hudX+12, y+146);
+  ctx.fillText('T — return to terminal', hudX+12, y+166);
+
+  // show angles
+  ctx.fillStyle = theme.dim; ctx.fillText('Joint angles (deg):', hudX+12, y+200);
+  ctx.fillStyle = theme.text; ctx.fillText((arm.angles[0]*180/Math.PI).toFixed(1), hudX+12, y+222);
+  ctx.fillText((arm.angles[1]*180/Math.PI).toFixed(1), hudX+12, y+242);
+  ctx.fillText((arm.angles[2]*180/Math.PI).toFixed(1), hudX+12, y+262);
+
+  // success message
+  if(arm._success){
+    ctx.fillStyle = '#7ef5c7'; ctx.font = '600 18px Inter, ui-sans-serif'; ctx.fillText('Block delivered! Nice.', hudX+12, y+320);
+  }
+}
+
+// Initialize a few things for first frame
+(function init(){
+  // adjust arm base in case of resize
+  arm.base = {x: 220, y: canvas.height/DPR - 140};
+})();
+
+// Capture focus for keyboard input
+canvas.tabIndex = 1000; // allow canvas to receive keyboard
+canvas.style.outline = 'none';
+canvas.addEventListener('click', ()=>{ canvas.focus(); });
+canvas.focus();
+
+</script>
+</body>
+</html>
