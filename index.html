@@ -310,7 +310,7 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
           <div class="vp">
             <div class="pi">▶</div>
             <span>Demo: LiDAR-to-BEV</span>
-            <span class="vlabel">replace with &lt;video src="bev-demo.mp4"&gt;</span>
+            <!-- <span class="vlabel">replace with &lt;video src="bev-demo.mp4"&gt;</span> -->
           </div>
         </div>
         <div class="card-title">LiDAR-to-BEV Neural Network</div>
@@ -326,7 +326,7 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
           <div>
             <span class="card-tag tag-blue">Manipulation</span>
             <div class="card-title">6-DOF Robotic Arm Simulation</div>
-            <div class="card-desc">Forward/inverse kinematics for pick-and-place in Isaac Sim. Collision-free motion planning with ROS2 Humble for real-time trajectory optimization validated in simulation before hardware deployment.</div>
+            <div class="card-desc">Forward/inverse kinematics for cable insertion in Gazebo. Collision-free motion planning with ROS2 Humble for real-time trajectory optimization validated in simulation before hardware deployment.</div>
             <div class="card-chips" style="margin-top:14px;">
               <span class="chip">Isaac Sim</span><span class="chip">ROS2</span><span class="chip">Python</span><span class="chip">USD Physics</span><span class="chip">IK/FK</span>
             </div>
@@ -353,15 +353,15 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
       </div>
 
       <!-- RISC-V -->
-      <div class="bento-card span-4 reveal">
+      <!-- <div class="bento-card span-4 reveal">
         <span class="card-tag tag-gray">Hardware</span>
         <span class="card-icon">⚡</span>
-        <div class="card-title">RISC-V Single-Cycle Processor</div>
+        <div class="card-title">F1-Tenth Build</div>
         <div class="card-desc">Full RV32I datapath on DE1-SOC FPGA. Verilog, Quartus synthesis, and RARS assembly debugging — register and label conflict resolution.</div>
         <div class="card-chips">
-          <span class="chip">Verilog</span><span class="chip">FPGA</span><span class="chip">RISC-V</span><span class="chip">Quartus</span>
+          <span class="chip">F1-Tenth</span><span class="chip">Nvidia Jetson</span><span class="chip">LiDAR</span><span class="chip"></span>
         </div>
-      </div>
+      </div> -->
 
       <!-- Desktop systems -->
       <div class="bento-card span-4 reveal reveal-delay-1">
@@ -386,17 +386,18 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
     <p class="section-body reveal reveal-delay-2">Robots running in simulation and on hardware.</p>
 
     <!-- HOW-TO NOTE — remove this block once you've added real videos -->
-    <div class="video-how-to reveal reveal-delay-3">
+    <!-- <div class="video-how-to reveal reveal-delay-3">
       <strong>Adding your videos:</strong> For each demo slot below, find the <code>&lt;!-- REPLACE --&gt;</code> comment and swap the placeholder div with either:<br>
       &nbsp;• Self-hosted: <code>&lt;video src="your-file.mp4" controls muted loop playsinline&gt;&lt;/video&gt;</code><br>
       &nbsp;• YouTube: <code>&lt;iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen&gt;&lt;/iframe&gt;</code>
-    </div>
+    </div> -->
 
     <div class="demo-grid">
 
       <div class="demo-item reveal">
         <div class="demo-item-video">
           <!-- REPLACE: <video src="physics-sim.mp4" controls muted loop playsinline></video> -->
+          <iframe src="https://youtu.be/gxp6OU_Tpc4" allowfullscreen></iframe>
           <div class="vp2"><div class="pi2">▶</div><span>Physics Simulator Demo</span></div>
         </div>
         <div class="demo-item-body">
@@ -409,6 +410,7 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
       <div class="demo-item reveal reveal-delay-1">
         <div class="demo-item-video">
           <!-- REPLACE: <video src="lidar-bev.mp4" controls muted loop playsinline></video> -->
+          <iframe src=https://youtube.com/shorts/RCV6DJ11cQ4" allowfullscreen></iframe>
           <div class="vp2"><div class="pi2">▶</div><span>LiDAR-to-BEV Demo</span></div>
         </div>
         <div class="demo-item-body">
@@ -421,26 +423,27 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
       <div class="demo-item reveal">
         <div class="demo-item-video">
           <!-- REPLACE: <video src="arm-pickplace.mp4" controls muted loop playsinline></video> -->
+          <iframe src="https://youtu.be/Fi5NSZr7qrs" allowfullscreen></iframe>
           <div class="vp2"><div class="pi2">▶</div><span>Robotic Arm Demo</span></div>
         </div>
         <div class="demo-item-body">
-          <div class="demo-item-title">6-DOF Arm — Pick &amp; Place</div>
-          <div class="demo-item-desc">IK/FK-driven manipulation in Isaac Sim. Collision-free motion planning pipeline validated before hardware deployment.</div>
-          <div class="demo-chips"><span class="demo-chip">Isaac Sim</span><span class="demo-chip">IK/FK</span><span class="demo-chip">ROS2</span></div>
+          <div class="demo-item-title">6-DOF Arm — Cable Insertion</div>
+          <div class="demo-item-desc">IK/FK-driven manipulation in Gazebo. Collision-free motion planning pipeline validated before hardware deployment.</div>
+          <div class="demo-chips"><span class="demo-chip">Gazebo</span><span class="demo-chip">IK/FK</span><span class="demo-chip">ROS2</span></div>
         </div>
       </div>
 
-      <div class="demo-item reveal reveal-delay-1">
-        <div class="demo-item-video">
+      <!-- <div class="demo-item reveal reveal-delay-1">
+        <div class="demo-item-video"> -->
           <!-- REPLACE: <video src="chip-inspection.mp4" controls muted loop playsinline></video> -->
-          <div class="vp2"><div class="pi2">▶</div><span>Chip Inspection Demo</span></div>
+          <!-- <div class="vp2"><div class="pi2">▶</div><span>Chip Inspection Demo</span></div>
         </div>
         <div class="demo-item-body">
           <div class="demo-item-title">Vision-Based Chip Inspection</div>
           <div class="demo-item-desc">98% defect-detection accuracy using OpenCV. Deployed in production at Trillion-Sr, improving line efficiency by 10%.</div>
           <div class="demo-chips"><span class="demo-chip">OpenCV</span><span class="demo-chip">Python</span><span class="demo-chip">C++</span></div>
         </div>
-      </div>
+      </div> -->
 
     </div>
   </div>
@@ -609,7 +612,7 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
       <p class="eyebrow">Co-authored Paper · 2024–25</p>
       <h3 class="section-title" style="font-size:clamp(26px,3.5vw,38px);">Habitat Modeling Using CNNs<br>and Tabular Environmental Data</h3>
       <p class="section-body">A hybrid deep learning architecture combining convolutional networks with structured tabular environmental features for species habitat suitability prediction. Multi-modal fusion improved AUC by ~8% over image-only baselines across 12 evaluated species.</p>
-      <div class="research-badge">Published · Northeastern University</div>
+      <div class="research-badge"><a href ="https://arxiv.org/abs/2507.10993">Published · Northeastern University</a></div>
     </div>
   </div>
 </section>
