@@ -1,459 +1,623 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Min Hong Shih — Robotics Portfolio</title>
-  <style>
-    /* Minimal page chrome, canvas fills viewport */
-    html,body{height:100%;margin:0;background:#0b0d10;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
-    #app{height:100%;display:flex;align-items:center;justify-content:center}
-    canvas{width:100vw;height:100vh;display:block}
-    /* Make text selectable on fallback elements if any */
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Min-Hong — Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Berkeley+Mono:ital,wght@0,100..700;1,100..700&family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0f0f0d;
+    --surface: #161614;
+    --surface2: #1e1e1b;
+    --surface3: #252520;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8e5dc;
+    --text2: #9b9890;
+    --text3: #5c5a55;
+    --accent: #c8a96e;
+    --accent2: #7ecea0;
+    --accent3: #6eb5ce;
+    --red: #ce7e7e;
+    --mono: 'Berkeley Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+    --sans: 'DM Sans', sans-serif;
+    --sidebar-w: 260px;
+    --radius: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.7; display: flex; min-height: 100vh; overflow-x: hidden; }
+
+  /* SIDEBAR */
+  #sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
+  .sidebar-header { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }
+  .avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 14px; font-weight: 700; color: #0f0f0d; margin-bottom: 12px; }
+  .sidebar-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .sidebar-role { font-size: 12px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+  .sidebar-search { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-search input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text2); font-family: var(--mono); font-size: 12px; padding: 7px 10px; outline: none; transition: border-color 0.2s; }
+  .sidebar-search input:focus { border-color: var(--border2); color: var(--text); }
+  .sidebar-search input::placeholder { color: var(--text3); }
+  .sidebar-nav { padding: 8px 0; flex: 1; }
+  .nav-section-label { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; padding: 12px 20px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 20px; font-size: 13.5px; color: var(--text2); cursor: pointer; transition: background 0.15s, color 0.15s; user-select: none; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--surface3); color: var(--text); }
+  .nav-item .nav-icon { font-size: 14px; width: 18px; text-align: center; opacity: 0.7; }
+  .nav-item .nav-badge { margin-left: auto; font-family: var(--mono); font-size: 10px; background: var(--surface3); color: var(--text3); padding: 1px 6px; border-radius: 3px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  /* MAIN */
+  #main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .page { display: none; flex-direction: column; flex: 1; }
+  .page.active { display: flex; }
+
+  /* TOPBAR */
+  .topbar { position: sticky; top: 0; z-index: 50; background: rgba(15,15,13,0.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 72px; height: 44px; flex-shrink: 0; }
+  .topbar-left { display: flex; align-items: center; gap: 8px; }
+  .topbar-page-name { font-size: 13px; color: var(--text2); }
+  .topbar-actions { display: flex; gap: 8px; }
+  .topbar-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 5px 12px; font-family: var(--mono); font-size: 11px; color: var(--text2); cursor: pointer; transition: background 0.2s, color 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .topbar-btn:hover { background: var(--surface3); color: var(--text); }
+  .topbar-btn.primary { background: rgba(126,206,160,0.12); border-color: rgba(126,206,160,0.3); color: var(--accent2); }
+  .topbar-btn.primary:hover { background: rgba(126,206,160,0.2); }
+
+  /* PAGE COVER */
+  .page-cover { width: 100%; height: 200px; background: linear-gradient(135deg, #1a1a14 0%, #0f1a14 50%, #0a0f1a 100%); position: relative; overflow: hidden; flex-shrink: 0; }
+  .page-cover-pattern { position: absolute; inset: 0; background-image: radial-gradient(circle at 20% 50%, rgba(126,206,160,0.06) 0%, transparent 50%), radial-gradient(circle at 80% 30%, rgba(110,181,206,0.06) 0%, transparent 50%), linear-gradient(0deg, transparent 24%, rgba(255,255,255,0.01) 25%, rgba(255,255,255,0.01) 26%, transparent 27%), linear-gradient(90deg, transparent 24%, rgba(255,255,255,0.01) 25%, rgba(255,255,255,0.01) 26%, transparent 27%); background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px; }
+
+  /* PAGE HEADER */
+  .page-header { padding: 60px 72px 32px; border-bottom: 1px solid var(--border); }
+  .page-icon { font-size: 48px; margin-bottom: 16px; line-height: 1; }
+  .page-title { font-family: var(--serif); font-size: 42px; font-weight: 400; color: var(--text); letter-spacing: -0.5px; line-height: 1.15; }
+  .page-subtitle { margin-top: 8px; font-size: 16px; color: var(--text2); max-width: 600px; }
+  .page-meta { margin-top: 20px; display: flex; gap: 24px; flex-wrap: wrap; }
+  .meta-tag { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .meta-tag span { color: var(--text2); }
+
+  /* PAGE BODY */
+  .page-body { padding: 40px 72px 80px; max-width: 900px; }
+  .block { margin-bottom: 8px; }
+  .block-h2 { font-size: 18px; font-weight: 500; color: var(--text); margin-top: 28px; margin-bottom: 4px; }
+  .block-p { color: var(--text2); line-height: 1.75; font-size: 15px; }
+  .block-callout { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 14px 18px; font-size: 14px; color: var(--text2); display: flex; gap: 12px; margin: 16px 0; }
+  .block-callout .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+  .block-quote { border-left: 3px solid var(--border2); padding: 6px 20px; color: var(--text3); font-style: italic; font-family: var(--serif); font-size: 17px; margin: 16px 0; }
+  .block-divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* PROPERTY TABLE */
+  .prop-table { margin: 16px 0 24px; }
+  .prop-row { display: flex; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); gap: 24px; }
+  .prop-row:last-child { border-bottom: none; }
+  .prop-key { font-family: var(--mono); font-size: 12px; color: var(--text3); width: 140px; flex-shrink: 0; padding-top: 2px; }
+  .prop-val { font-size: 14px; color: var(--text); flex: 1; }
+
+  /* TAGS */
+  .tag { display: inline-flex; align-items: center; background: var(--surface3); border: 1px solid var(--border2); border-radius: 4px; padding: 2px 8px; font-family: var(--mono); font-size: 11px; color: var(--text2); margin: 0 4px 4px 0; }
+  .tag.green { background: rgba(126,206,160,0.12); border-color: rgba(126,206,160,0.25); color: var(--accent2); }
+  .tag.gold  { background: rgba(200,169,110,0.12); border-color: rgba(200,169,110,0.25); color: var(--accent); }
+  .tag.blue  { background: rgba(110,181,206,0.12); border-color: rgba(110,181,206,0.25); color: var(--accent3); }
+  .tag.red   { background: rgba(206,126,126,0.12); border-color: rgba(206,126,126,0.25); color: var(--red); }
+
+  /* CARD GRID */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 20px 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, background 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
+  .card:hover { border-color: var(--border2); background: var(--surface2); }
+  .card-cover { height: 130px; background: var(--surface2); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+  .card-cover-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6)); }
+  .card-body { padding: 14px; flex: 1; }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 5px; }
+  .card-desc { font-size: 12.5px; color: var(--text3); line-height: 1.5; }
+  .card-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* MEDIA */
+  .media-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 20px 0; }
+  .media-block img, .media-block video { width: 100%; display: block; max-height: 440px; object-fit: cover; }
+  .media-caption { padding: 10px 16px; font-size: 12px; color: var(--text3); font-family: var(--mono); border-top: 1px solid var(--border); }
+
+  /* TIMELINE */
+  .timeline { margin: 20px 0; }
+  .timeline-item { display: flex; gap: 16px; padding-bottom: 28px; position: relative; }
+  .timeline-item::before { content: ''; position: absolute; left: 7px; top: 20px; bottom: 0; width: 1px; background: var(--border); }
+  .timeline-item:last-child::before { display: none; }
+  .timeline-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--accent); background: var(--bg); flex-shrink: 0; margin-top: 4px; position: relative; z-index: 1; }
+  .timeline-content { flex: 1; }
+  .timeline-date { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .timeline-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .timeline-body { font-size: 13.5px; color: var(--text2); margin-top: 4px; line-height: 1.6; }
+
+  /* SKILL BARS */
+  .skill-list { margin: 16px 0; display: flex; flex-direction: column; gap: 10px; }
+  .skill-row { display: flex; flex-direction: column; gap: 4px; }
+  .skill-header { display: flex; justify-content: space-between; font-size: 13px; }
+  .skill-name { color: var(--text); }
+  .skill-level { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .skill-bar-bg { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+  .skill-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent3)); }
+
+  /* TOGGLE */
+  .toggle-block { margin: 8px 0; }
+  .toggle-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 0; color: var(--text2); font-size: 14px; user-select: none; }
+  .toggle-header:hover { color: var(--text); }
+  .toggle-arrow { font-size: 10px; color: var(--text3); transition: transform 0.2s; font-family: var(--mono); }
+  .toggle-arrow.open { transform: rotate(90deg); }
+  .toggle-body { display: none; padding: 8px 0 8px 20px; border-left: 2px solid var(--border); margin-left: 6px; }
+  .toggle-body.open { display: block; }
+
+  /* CODE */
+  .code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); margin: 16px 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .code-body { padding: 16px; font-family: var(--mono); font-size: 12.5px; color: var(--accent2); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .code-body .kw  { color: var(--accent); }
+  .code-body .str { color: var(--red); }
+  .code-body .cmt { color: var(--text3); font-style: italic; }
+  .code-body .fn  { color: var(--accent3); }
+
+  /* GALLERY */
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0; }
+  .gallery-item { aspect-ratio: 4/3; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: border-color 0.2s; position: relative; }
+  .gallery-item:hover { border-color: var(--border2); }
+  .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+  .gallery-item .gallery-label { position: absolute; bottom: 6px; left: 8px; right: 8px; font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 3px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+
+  /* STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin: 20px 0; }
+  .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .stat-value { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--text); }
+  .stat-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .stat-sub { font-family: var(--mono); font-size: 11px; color: var(--accent2); margin-top: 4px; }
+
+  /* TABLE */
+  .notion-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 16px 0; }
+  .notion-table th { text-align: left; padding: 8px 12px; font-family: var(--mono); font-size: 11px; color: var(--text3); border-bottom: 1px solid var(--border); font-weight: 400; }
+  .notion-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+  .notion-table tr:last-child td { border-bottom: none; }
+  .notion-table tr:hover td { background: var(--surface2); }
+
+  /* VIDEO */
+  .video-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 20px 0; }
+  .video-block video { width: 100%; display: block; }
+  .video-placeholder { aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; background: var(--surface2); color: var(--text3); font-size: 13px; }
+  .video-play-btn { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+  /* SCROLLBARS */
+  #main::-webkit-scrollbar { width: 5px; }
+  #main::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+  /* MOBILE */
+  #sidebar-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 200; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; width: 36px; height: 36px; cursor: pointer; align-items: center; justify-content: center; font-size: 16px; color: var(--text2); }
+  @media (max-width: 768px) {
+    #sidebar-toggle { display: flex; }
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; }
+    .page-header { padding: 40px 24px 24px; }
+    .topbar { padding: 0 24px; }
+    .page-body { padding: 24px 24px 60px; }
+    .page-title { font-size: 30px; }
+    .gallery { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
 </head>
 <body>
-  <div id="app">
-    <canvas id="cv"></canvas>
+
+<div id="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</div>
+
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="avatar">MH</div>
+    <div class="sidebar-name">Min-Hong</div>
+    <div class="sidebar-role">cs · northeastern · boston</div>
+  </div>
+  <div class="sidebar-search">
+    <input type="text" placeholder="Search pages…" oninput="filterNav(this.value)" />
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Workspace</div>
+    <div class="nav-item active" data-page="home" onclick="navigate('home',this)"><span class="nav-icon">🏠</span> Home</div>
+    <div class="nav-item" data-page="about" onclick="navigate('about',this)"><span class="nav-icon">👤</span> About Me</div>
+    <div class="nav-section-label">Projects</div>
+    <div class="nav-item" data-page="robotics" onclick="navigate('robotics',this)"><span class="nav-icon">🤖</span> Robotics Research <span class="nav-badge">active</span></div>
+    <div class="nav-item" data-page="gamenite" onclick="navigate('gamenite',this)"><span class="nav-icon">🎮</span> GameNite Platform</div>
+    <div class="nav-item" data-page="fpga" onclick="navigate('fpga',this)"><span class="nav-icon">⚡</span> RISC-V FPGA</div>
+    <div class="nav-item" data-page="research" onclick="navigate('research',this)"><span class="nav-icon">📄</span> Publications</div>
+    <div class="nav-section-label">Experience</div>
+    <div class="nav-item" data-page="experience" onclick="navigate('experience',this)"><span class="nav-icon">💼</span> Work History</div>
+    <div class="nav-item" data-page="skills" onclick="navigate('skills',this)"><span class="nav-icon">🛠</span> Skills & Tech</div>
+    <div class="nav-item" data-page="gallery" onclick="navigate('gallery',this)"><span class="nav-icon">🖼</span> Media Gallery</div>
+  </div>
+  <div class="sidebar-footer">v2025 · Boston, MA</div>
+</nav>
+
+<div id="main">
+
+  <!-- HOME -->
+  <div id="page-home" class="page active">
+    <div class="page-cover"><div class="page-cover-pattern"></div></div>
+    <div class="topbar">
+      <div class="topbar-left"><span class="topbar-page-name">Home</span></div>
+      <div class="topbar-actions"><a href="mailto:minhong@northeastern.edu" class="topbar-btn primary">✉ Contact</a></div>
+    </div>
+    <div class="page-header">
+      <div class="page-icon">👋</div>
+      <h1 class="page-title">Min-Hong's Portfolio</h1>
+      <p class="page-subtitle">Robotics researcher, systems programmer, and full-stack engineer at Northeastern University.</p>
+      <div class="page-meta">
+        <div class="meta-tag">📍 <span>Boston, MA</span></div>
+        <div class="meta-tag">🎓 <span>Northeastern University — CS + Math</span></div>
+        <div class="meta-tag">🔬 <span>Autonomy & Intelligence Lab</span></div>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="stat-grid block">
+        <div class="stat-card"><div class="stat-value">3</div><div class="stat-label">Internships</div><div class="stat-sub">Zilliant · EY · SkreenAI</div></div>
+        <div class="stat-card"><div class="stat-value">1</div><div class="stat-label">Co-authored Paper</div><div class="stat-sub">CNN + Habitat Modeling</div></div>
+        <div class="stat-card"><div class="stat-value">RTX<br><span style="font-size:16px">5090</span></div><div class="stat-label">Dev Machine</div><div class="stat-sub">Ubuntu + Windows dual</div></div>
+        <div class="stat-card"><div class="stat-value">6+</div><div class="stat-label">Languages</div><div class="stat-sub">Python · TS · C++ · Rust…</div></div>
+      </div>
+      <hr class="block-divider block"/>
+      <h2 class="block-h2 block">📌 Pinned Projects</h2>
+      <div class="card-grid block">
+        <div class="card" onclick="navigate('robotics',document.querySelector('[data-page=robotics]'))">
+          <div class="card-cover" style="background:linear-gradient(135deg,#0f1a14,#0a1520)"><span style="font-size:48px">🦾</span><div class="card-cover-overlay"></div></div>
+          <div class="card-body"><div class="card-title">ACT Imitation Learning — Fiber Optic Insertion</div><div class="card-desc">ROS2 · Zenoh · HDF5 data collection for cable insertion robot.</div><div class="card-tags"><span class="tag green">active</span><span class="tag blue">robotics</span></div></div>
+        </div>
+        <div class="card" onclick="navigate('gamenite',document.querySelector('[data-page=gamenite]'))">
+          <div class="card-cover" style="background:linear-gradient(135deg,#160f1a,#0a0f1a)"><span style="font-size:48px">🃏</span><div class="card-cover-overlay"></div></div>
+          <div class="card-body"><div class="card-title">GameNite — Multiplayer Platform</div><div class="card-desc">TypeScript monorepo with Mafia, AI bots, Socket.IO, and full test suite.</div><div class="card-tags"><span class="tag gold">typescript</span><span class="tag blue">fullstack</span></div></div>
+        </div>
+        <div class="card" onclick="navigate('fpga',document.querySelector('[data-page=fpga]'))">
+          <div class="card-cover" style="background:linear-gradient(135deg,#1a140a,#0a0f15)"><span style="font-size:48px">⚡</span><div class="card-cover-overlay"></div></div>
+          <div class="card-body"><div class="card-title">RISC-V Single-Cycle Processor</div><div class="card-desc">Full datapath on DE1-SOC FPGA. Assembly, Verilog, lab report.</div><div class="card-tags"><span class="tag red">hardware</span><span class="tag">FPGA</span></div></div>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- ABOUT -->
+  <div id="page-about" class="page">
+    <div class="topbar"><div class="topbar-left"><span class="topbar-page-name">About Me</span></div></div>
+    <div class="page-header">
+      <div class="page-icon">👤</div>
+      <h1 class="page-title">About Min-Hong</h1>
+      <p class="page-subtitle">CS undergrad, researcher, and builder with a penchant for robotics and dynamical systems.</p>
+    </div>
+    <div class="page-body">
+      <div class="prop-table block">
+        <div class="prop-row"><div class="prop-key">University</div><div class="prop-val">Northeastern University</div></div>
+        <div class="prop-row"><div class="prop-key">Major</div><div class="prop-val">Computer Science <span class="tag">Mathematics Minor</span></div></div>
+        <div class="prop-row"><div class="prop-key">Research Lab</div><div class="prop-val">Autonomy & Intelligence Lab — Undergraduate Researcher</div></div>
+        <div class="prop-row"><div class="prop-key">Location</div><div class="prop-val">Boston, MA</div></div>
+        <div class="prop-row"><div class="prop-key">Hardware</div><div class="prop-val">Lenovo Legion Pro · RTX 5090 · Ubuntu / Windows dual-boot</div></div>
+        <div class="prop-row"><div class="prop-key">Interests</div><div class="prop-val"><span class="tag green">Robotics</span><span class="tag blue">Dynamical Systems</span><span class="tag gold">Systems Programming</span><span class="tag">Competitive Programming</span><span class="tag">FPGA</span></div></div>
+      </div>
+      <h2 class="block-h2 block">Bio</h2>
+      <p class="block-p block">I'm an undergraduate researcher and software engineer studying Computer Science with a Mathematics minor at Northeastern University. My work lives at the intersection of robotics, control theory, and software systems — from training imitation learning models on physical robot hardware, to building real-time multiplayer platforms in TypeScript.</p>
+      <p class="block-p block" style="margin-top:12px">Currently at the Northeastern Autonomy & Intelligence Lab, I work on data collection infrastructure for ACT (Action Chunking with Transformers) imitation learning, targeting fine-grained manipulation tasks like fiber optic cable insertion. My stack spans ROS2, Zenoh, Gazebo, and custom HDF5 pipelines.</p>
+      <blockquote class="block-quote block">"Build systems that learn from the world — then let the world build better systems."</blockquote>
+      <h2 class="block-h2 block">Academic Interests</h2>
+      <div class="toggle-block block">
+        <div class="toggle-header" onclick="toggleBlock(this)"><span class="toggle-arrow">▶</span> Dynamical Systems & Bifurcation Theory</div>
+        <div class="toggle-body"><p class="block-p">Currently studying index theory, limit cycles, Poincaré-Bendixson theorem, and two-dimensional bifurcations. I use Desmos and Python for phase portrait visualization. Particularly interested in Hopf bifurcations and their connections to oscillatory robot behaviors.</p></div>
+      </div>
+      <div class="toggle-block block">
+        <div class="toggle-header" onclick="toggleBlock(this)"><span class="toggle-arrow">▶</span> Robotics & Control</div>
+        <div class="toggle-body"><p class="block-p">Experience with ROS2, Isaac Sim (IsaacLab), F1Tenth autonomous racing, and imitation learning (ACT). Especially interested in combining learning-based methods with classical control for reliable, interpretable robot behavior.</p></div>
+      </div>
+      <div class="toggle-block block">
+        <div class="toggle-header" onclick="toggleBlock(this)"><span class="toggle-arrow">▶</span> Formal Language Theory & Systems</div>
+        <div class="toggle-body"><p class="block-p">Strong foundation in DFAs, NFAs, regular expressions, and formal proofs. I enjoy systems programming in C++ and have built a custom shell, among other low-level projects.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROBOTICS -->
+  <div id="page-robotics" class="page">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-page-name" onclick="navigate('home',document.querySelector('[data-page=home]'))" style="cursor:pointer;color:var(--text3)">Home</span>
+        <span style="color:var(--text3);font-size:11px;margin:0 4px">/</span>
+        <span class="topbar-page-name">Robotics Research</span>
+      </div>
+    </div>
+    <div class="page-header">
+      <div class="page-icon">🤖</div>
+      <h1 class="page-title">Robotics Research</h1>
+      <p class="page-subtitle">Imitation learning, simulation environments, and data collection at the NEU Autonomy & Intelligence Lab.</p>
+      <div class="page-meta">
+        <div class="meta-tag">📍 <span>Northeastern University</span></div>
+        <div class="meta-tag">🔬 <span>Undergraduate Researcher</span></div>
+        <div class="meta-tag">🛠 <span>ROS2 · Zenoh · HDF5 · IsaacLab</span></div>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="block-callout block">
+        <div class="callout-icon">🎯</div>
+        <div><strong>Current focus:</strong> Building a stratified data collection orchestrator for ACT imitation learning targeting fiber optic cable insertion in a multi-container setup (distrobox + Gazebo + Zenoh RMW).</div>
+      </div>
+      <h2 class="block-h2 block">Project 1 — ACT Cable Insertion</h2>
+      <div class="prop-table block">
+        <div class="prop-row"><div class="prop-key">Goal</div><div class="prop-val">Train an ACT (Action Chunking Transformer) policy for fine-grained fiber optic cable insertion</div></div>
+        <div class="prop-row"><div class="prop-key">Stack</div><div class="prop-val"><span class="tag blue">ROS2</span><span class="tag blue">Zenoh RMW</span><span class="tag">Gazebo</span><span class="tag">distrobox</span><span class="tag green">Python</span></div></div>
+        <div class="prop-row"><div class="prop-key">Data</div><div class="prop-val">HDF5 episodes · Force/Torque · Camera RGB · 7D absolute target poses</div></div>
+        <div class="prop-row"><div class="prop-key">Status</div><div class="prop-val"><span class="tag green">Active</span></div></div>
+      </div>
+      <div class="video-block block">
+        <div class="video-placeholder">
+          <div class="video-play-btn">▶</div>
+          <span>Demo: Fiber optic cable insertion task</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">[Replace with your robot demo video]</span>
+        </div>
+        <div class="media-caption">robot_demo.mp4 · ACT policy inference on physical hardware</div>
+      </div>
+      <div class="code-block block">
+        <div class="code-header"><span>data.py — Data Collection Orchestrator</span><span>Python</span></div>
+        <div class="code-body"><span class="kw">class</span> <span class="fn">DataCollectionOrchestrator</span>:
+    <span class="cmt"># Manages ROS2 lifecycle + policy node activation</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, config: <span class="fn">OrchestratorConfig</span>):
+        self.zenoh_session = <span class="fn">zenoh.open</span>(config.zenoh_config)
+        self.episode_buffer = <span class="fn">HDF5EpisodeBuffer</span>(config.output_dir)
+
+    <span class="kw">async def</span> <span class="fn">collect_episode</span>(self, policy_node):
+        obs = <span class="kw">await</span> self.<span class="fn">get_observation</span>()  <span class="cmt"># ft + cam + pose</span>
+        action = <span class="kw">await</span> policy_node.<span class="fn">predict</span>(obs)
+        self.episode_buffer.<span class="fn">append</span>(obs, action)</div>
+      </div>
+      <h2 class="block-h2 block">Project 2 — WheeledLab / IsaacLab</h2>
+      <div class="prop-table block">
+        <div class="prop-row"><div class="prop-key">Environment</div><div class="prop-val">IsaacLab simulation · MuSHR robot ramp dynamics</div></div>
+        <div class="prop-row"><div class="prop-key">Work</div><div class="prop-val">Migrated training pipeline to new rsl_rl API; fixed TensorDict return signatures; debugged data collection scripts</div></div>
+        <div class="prop-row"><div class="prop-key">Finding</div><div class="prop-val">~3% of steps are airborne — analyzed training data balance implications for policy learning</div></div>
+      </div>
+      <div class="media-block block">
+        <div style="aspect-ratio:16/9;background:linear-gradient(135deg,#0a1520,#0f2015);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text3)">
+          <span style="font-size:48px">🏎</span>
+          <span style="font-size:13px">IsaacLab simulation environment</span>
+          <span style="font-family:var(--mono);font-size:11px">[Add simulation screenshot here]</span>
+        </div>
+        <div class="media-caption">IsaacLab · MuSHR robot ramp dynamics · rsl_rl training pipeline</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAMENITE -->
+  <div id="page-gamenite" class="page">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-page-name" onclick="navigate('home',document.querySelector('[data-page=home]'))" style="cursor:pointer;color:var(--text3)">Home</span>
+        <span style="color:var(--text3);font-size:11px;margin:0 4px">/</span>
+        <span class="topbar-page-name">GameNite</span>
+      </div>
+    </div>
+    <div class="page-header">
+      <div class="page-icon">🎮</div>
+      <h1 class="page-title">GameNite Platform</h1>
+      <p class="page-subtitle">A TypeScript monorepo multiplayer game platform — Mafia, AI bots, real-time lobbies.</p>
+    </div>
+    <div class="page-body">
+      <div class="prop-table block">
+        <div class="prop-row"><div class="prop-key">Stack</div><div class="prop-val"><span class="tag gold">TypeScript</span><span class="tag">Socket.IO</span><span class="tag">MongoDB</span><span class="tag blue">React</span><span class="tag">Node.js</span></div></div>
+        <div class="prop-row"><div class="prop-key">Architecture</div><div class="prop-val">Monorepo · Shared types · Event-driven socket game logic</div></div>
+        <div class="prop-row"><div class="prop-key">Features</div><div class="prop-val">Mafia game · AI bot system with personalities · Comprehensive test suite</div></div>
+        <div class="prop-row"><div class="prop-key">Status</div><div class="prop-val"><span class="tag green">In Development</span></div></div>
+      </div>
+      <h2 class="block-h2 block">Architecture Overview</h2>
+      <p class="block-p block">GameNite is a TypeScript monorepo with shared type definitions ensuring type-safety across client and server. Game logic runs event-driven via Socket.IO, with MongoDB for persistence. The AI bot system uses configurable personality profiles to simulate realistic player behavior in Mafia.</p>
+      <div class="code-block block">
+        <div class="code-header"><span>mafia-bot.ts — AI Personality System</span><span>TypeScript</span></div>
+        <div class="code-body"><span class="kw">interface</span> <span class="fn">BotPersonality</span> {
+  id: <span class="str">'aggressive'</span> | <span class="str">'passive'</span> | <span class="str">'analytical'</span> | <span class="str">'chaotic'</span>;
+  voteWeight: number;
+  bluffThreshold: number;
+  communicationStyle: <span class="fn">StyleConfig</span>;
+}
+
+<span class="kw">class</span> <span class="fn">MafiaBot</span> <span class="kw">implements</span> <span class="fn">GamePlayer</span> {
+  <span class="fn">decideVote</span>(gameState: <span class="fn">GameState</span>): <span class="fn">Vote</span> {
+    <span class="kw">const</span> suspicion = <span class="kw">this</span>.<span class="fn">analyzeSuspicion</span>(gameState);
+    <span class="kw">return</span> suspicion.score > <span class="kw">this</span>.personality.voteWeight
+      ? { target: suspicion.topSuspect }
+      : { target: <span class="fn">randomPick</span>(gameState.alivePlayers) };
+  }
+}</div>
+      </div>
+      <h2 class="block-h2 block">Recent Work</h2>
+      <div class="timeline block">
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-date">2025</div><div class="timeline-title">Expanded AI bot personalities</div><div class="timeline-body">Added analytical and chaotic archetypes with configurable bluff thresholds. Bots now adapt vote behavior based on game phase.</div></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-date">2025</div><div class="timeline-title">Fixed lobby UI bugs</div><div class="timeline-body">Resolved button visibility at player count boundaries — start button correctly shows/hides based on min/max thresholds.</div></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-date">2024</div><div class="timeline-title">TypeScript unit test suite</div><div class="timeline-body">Comprehensive tests for socket event handlers and game state transitions, covering edge cases in Mafia role assignment and night action resolution.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FPGA -->
+  <div id="page-fpga" class="page">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-page-name" onclick="navigate('home',document.querySelector('[data-page=home]'))" style="cursor:pointer;color:var(--text3)">Home</span>
+        <span style="color:var(--text3);font-size:11px;margin:0 4px">/</span>
+        <span class="topbar-page-name">RISC-V FPGA</span>
+      </div>
+    </div>
+    <div class="page-header">
+      <div class="page-icon">⚡</div>
+      <h1 class="page-title">RISC-V Single-Cycle Processor</h1>
+      <p class="page-subtitle">Full single-cycle datapath on DE1-SOC FPGA. Verilog, assembly debugging, lab report.</p>
+    </div>
+    <div class="page-body">
+      <div class="prop-table block">
+        <div class="prop-row"><div class="prop-key">Hardware</div><div class="prop-val">DE1-SOC FPGA</div></div>
+        <div class="prop-row"><div class="prop-key">ISA</div><div class="prop-val">RISC-V (RV32I subset)</div></div>
+        <div class="prop-row"><div class="prop-key">Tools</div><div class="prop-val"><span class="tag">Verilog</span><span class="tag">RARS</span><span class="tag">Quartus</span></div></div>
+        <div class="prop-row"><div class="prop-key">Status</div><div class="prop-val"><span class="tag gold">In Progress</span></div></div>
+      </div>
+      <div class="block-callout block">
+        <div class="callout-icon">🐛</div>
+        <div>Found two key bugs in RISC-V assembly for a grade-assignment program: <strong>register overwrite</strong> mid-routine (a0 clobbered before use) and a <strong>label conflict</strong> between branch targets in RARS. Fixed with register renaming and unique label scoping.</div>
+      </div>
+      <div class="code-block block">
+        <div class="code-header"><span>grade.asm — RISC-V Assembly (fixed)</span><span>RISC-V ASM</span></div>
+        <div class="code-body"><span class="cmt"># Grade assignment: input score → letter grade</span>
+<span class="fn">compute_grade</span>:
+    <span class="kw">li</span>   t0, 90
+    <span class="kw">bge</span>  a0, t0, <span class="fn">grade_A</span>      <span class="cmt"># score >= 90 → A</span>
+    <span class="kw">li</span>   t0, 80
+    <span class="kw">bge</span>  a0, t0, <span class="fn">grade_B</span>      <span class="cmt"># score >= 80 → B</span>
+<span class="fn">grade_A</span>:
+    <span class="kw">li</span>   a1, <span class="str">'A'</span>
+    <span class="kw">ret</span>
+<span class="fn">grade_B</span>:                         <span class="cmt"># unique label (was conflict)</span>
+    <span class="kw">li</span>   a1, <span class="str">'B'</span>
+    <span class="kw">ret</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div id="page-research" class="page">
+    <div class="topbar"><div class="topbar-left"><span class="topbar-page-name">Publications</span></div></div>
+    <div class="page-header">
+      <div class="page-icon">📄</div>
+      <h1 class="page-title">Research & Publications</h1>
+      <p class="page-subtitle">Academic work, co-authored papers, and research contributions.</p>
+    </div>
+    <div class="page-body">
+      <table class="notion-table block">
+        <thead><tr><th>Title</th><th>Role</th><th>Year</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Habitat Modeling Using CNNs and Tabular Environmental Data</td><td>Co-author</td><td>2024–25</td><td><span class="tag green">Published</span></td></tr>
+          <tr><td>ACT Imitation Learning for Fine-Grained Manipulation</td><td>Researcher</td><td>2025</td><td><span class="tag gold">In Progress</span></td></tr>
+        </tbody>
+      </table>
+      <h2 class="block-h2 block">Habitat Modeling Paper</h2>
+      <p class="block-p block">This paper explores combining deep convolutional neural networks with structured tabular environmental features for predicting species habitat suitability. The hybrid architecture outperforms either modality alone by learning spatial patterns from satellite imagery while incorporating hand-engineered ecological covariates.</p>
+      <div class="block-callout block" style="border-left-color:var(--accent3)">
+        <div class="callout-icon">📊</div>
+        <div>Key result: Multi-modal CNN + tabular fusion improved AUC by ~8% over image-only baseline across 12 evaluated species.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPERIENCE -->
+  <div id="page-experience" class="page">
+    <div class="topbar"><div class="topbar-left"><span class="topbar-page-name">Work History</span></div></div>
+    <div class="page-header">
+      <div class="page-icon">💼</div>
+      <h1 class="page-title">Work Experience</h1>
+      <p class="page-subtitle">Internships, research positions, and engineering roles.</p>
+    </div>
+    <div class="page-body">
+      <div class="timeline block">
+        <div class="timeline-item"><div class="timeline-dot" style="border-color:var(--accent3)"></div><div class="timeline-content"><div class="timeline-date">2024 – Present</div><div class="timeline-title">Undergraduate Researcher — NEU Autonomy & Intelligence Lab</div><div class="timeline-body">Built data collection infrastructure for ACT imitation learning. Developed <code>data.py</code> orchestrator and <code>dataCollection.py</code> policy. Worked with ROS2, Zenoh RMW, HDF5, Gazebo in multi-container environments.</div></div></div>
+        <div class="timeline-item"><div class="timeline-dot" style="border-color:var(--accent)"></div><div class="timeline-content"><div class="timeline-date">Co-op</div><div class="timeline-title">Software Engineer Intern — Zilliant</div><div class="timeline-body">Built the Zilliant Documentation & Analysis Tool (ZDT). Python parsers for formula/RDD dependency trees, collapsible markdown output, Rundeck job documentation with human-readable cron schedules, GitHub App-based repo parser containerized with Docker.</div></div></div>
+        <div class="timeline-item"><div class="timeline-dot" style="border-color:var(--accent)"></div><div class="timeline-content"><div class="timeline-date">Co-op</div><div class="timeline-title">Software Engineer Intern — Ernst & Young</div><div class="timeline-body">Enterprise-scale tooling and analysis systems.</div></div></div>
+        <div class="timeline-item"><div class="timeline-dot" style="border-color:var(--accent2)"></div><div class="timeline-content"><div class="timeline-date">Co-op</div><div class="timeline-title">Software Engineer Intern — SkreenAI (Stealth)</div><div class="timeline-body">Early-stage startup. Worked on an AI-powered product in a fast-moving engineering environment.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div id="page-skills" class="page">
+    <div class="topbar"><div class="topbar-left"><span class="topbar-page-name">Skills & Tech</span></div></div>
+    <div class="page-header">
+      <div class="page-icon">🛠</div>
+      <h1 class="page-title">Skills & Technologies</h1>
+    </div>
+    <div class="page-body">
+      <h2 class="block-h2 block">Languages</h2>
+      <div class="skill-list block">
+        <div class="skill-row"><div class="skill-header"><span class="skill-name">Python</span><span class="skill-level">Expert</span></div><div class="skill-bar-bg"><div class="skill-bar-fill" style="width:92%"></div></div></div>
+        <div class="skill-row"><div class="skill-header"><span class="skill-name">TypeScript / JavaScript</span><span class="skill-level">Advanced</span></div><div class="skill-bar-bg"><div class="skill-bar-fill" style="width:85%"></div></div></div>
+        <div class="skill-row"><div class="skill-header"><span class="skill-name">C++</span><span class="skill-level">Advanced</span></div><div class="skill-bar-bg"><div class="skill-bar-fill" style="width:80%"></div></div></div>
+        <div class="skill-row"><div class="skill-header"><span class="skill-name">Rust</span><span class="skill-level">Intermediate</span></div><div class="skill-bar-bg"><div class="skill-bar-fill" style="width:55%"></div></div></div>
+        <div class="skill-row"><div class="skill-header"><span class="skill-name">RISC-V Assembly / Verilog</span><span class="skill-level">Intermediate</span></div><div class="skill-bar-bg"><div class="skill-bar-fill" style="width:50%"></div></div></div>
+        <div class="skill-row"><div class="skill-header"><span class="skill-name">Dart / Flutter</span><span class="skill-level">Intermediate</span></div><div class="skill-bar-bg"><div class="skill-bar-fill" style="width:55%"></div></div></div>
+      </div>
+      <h2 class="block-h2 block">Robotics & ML</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 20px" class="block">
+        <span class="tag green">ROS2</span><span class="tag green">Isaac Sim</span><span class="tag green">IsaacLab</span>
+        <span class="tag blue">PyTorch</span><span class="tag blue">ACT</span><span class="tag blue">rsl_rl</span>
+        <span class="tag">Zenoh</span><span class="tag">Gazebo</span><span class="tag">HDF5</span><span class="tag">F1Tenth</span><span class="tag">CUDA</span>
+      </div>
+      <h2 class="block-h2 block">Full-Stack & Infrastructure</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 20px" class="block">
+        <span class="tag gold">React</span><span class="tag gold">Socket.IO</span><span class="tag gold">MongoDB</span>
+        <span class="tag">Docker</span><span class="tag">GitHub Actions</span><span class="tag">Node.js</span><span class="tag">REST APIs</span>
+      </div>
+      <h2 class="block-h2 block">Mathematics</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 20px" class="block">
+        <span class="tag blue">Dynamical Systems</span><span class="tag blue">Bifurcation Theory</span>
+        <span class="tag">Linear Algebra</span><span class="tag">Probability</span>
+        <span class="tag">Formal Language Theory</span><span class="tag">Combinatorics</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <div id="page-gallery" class="page">
+    <div class="topbar"><div class="topbar-left"><span class="topbar-page-name">Media Gallery</span></div></div>
+    <div class="page-header">
+      <div class="page-icon">🖼</div>
+      <h1 class="page-title">Media Gallery</h1>
+      <p class="page-subtitle">Photos, videos, and screenshots from projects and research.</p>
+    </div>
+    <div class="page-body">
+      <div class="block-callout block" style="border-left-color:var(--text3)">
+        <div class="callout-icon">📸</div>
+        <div>Replace the placeholder elements below with <code>&lt;img src="..."&gt;</code> or <code>&lt;video src="..." controls&gt;</code> tags to add your own media.</div>
+      </div>
+      <h2 class="block-h2 block">Robotics Lab</h2>
+      <div class="gallery block">
+        <div class="gallery-item"><span>🦾</span><div class="gallery-label">Robot arm setup</div></div>
+        <div class="gallery-item"><span>📡</span><div class="gallery-label">Zenoh network topology</div></div>
+        <div class="gallery-item"><span>🎥</span><div class="gallery-label">Camera calibration</div></div>
+        <div class="gallery-item"><span>📊</span><div class="gallery-label">Training loss curve</div></div>
+        <div class="gallery-item"><span>🔩</span><div class="gallery-label">Fiber optic cable rig</div></div>
+        <div class="gallery-item"><span>💻</span><div class="gallery-label">ROS2 node graph</div></div>
+      </div>
+      <h2 class="block-h2 block">FPGA & Hardware</h2>
+      <div class="gallery block">
+        <div class="gallery-item"><span>⚡</span><div class="gallery-label">DE1-SOC board</div></div>
+        <div class="gallery-item"><span>🔌</span><div class="gallery-label">RISC-V datapath schematic</div></div>
+        <div class="gallery-item"><span>📟</span><div class="gallery-label">Quartus waveform viewer</div></div>
+      </div>
+      <h2 class="block-h2 block">Project Screenshots</h2>
+      <div class="gallery block">
+        <div class="gallery-item"><span>🃏</span><div class="gallery-label">GameNite lobby UI</div></div>
+        <div class="gallery-item"><span>🤖</span><div class="gallery-label">AI bot dashboard</div></div>
+        <div class="gallery-item"><span>🌿</span><div class="gallery-label">Habitat model output</div></div>
+        <div class="gallery-item"><span>🏎</span><div class="gallery-label">IsaacLab sim</div></div>
+        <div class="gallery-item"><span>📈</span><div class="gallery-label">Phase portrait (Hopf)</div></div>
+        <div class="gallery-item"><span>📝</span><div class="gallery-label">Lab report draft</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
 <script>
-// Single-file Canvas app: modern terminal + keyboard-controlled 3-segment robotic arm demo
-// Author: Generated for Matt Shih
-
-const canvas = document.getElementById('cv');
-const ctx = canvas.getContext('2d');
-let DPR = window.devicePixelRatio || 1;
-function resize(){
-  DPR = window.devicePixelRatio || 1;
-  canvas.width = Math.floor(window.innerWidth * DPR);
-  canvas.height = Math.floor(window.innerHeight * DPR);
-  canvas.style.width = window.innerWidth + 'px';
-  canvas.style.height = window.innerHeight + 'px';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+function navigate(pageId, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('main').scrollTo(0, 0);
+  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
 }
-window.addEventListener('resize', resize);
-resize();
-
-// Style variables (sleek modern terminal)
-const theme = {
-  bg: '#0b0d10',
-  panel: '#0f1114',
-  accent: '#7ef5c7',
-  dim: '#98a0a6',
-  caret: '#b8ffe0',
-  text: '#e6f7f0',
-};
-
-// App state
-let mode = 'terminal'; // 'terminal' or 'arm'
-
-// Terminal state
-const term = {
-  lines: ["Welcome. Type 'help' and press Enter."],
-  input: '',
-  history: [],
-  histCursor: -1,
-  prompt: 'matt@robotics:~$ ',
-  maxLines: 200,
-};
-
-function pushLine(line){
-  term.lines.push(line);
-  if(term.lines.length>term.maxLines) term.lines.shift();
+function filterNav(val) {
+  val = val.toLowerCase();
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.style.display = !val || item.textContent.toLowerCase().includes(val) ? '' : 'none';
+  });
 }
-
-// Projects / about placeholders
-const ABOUT_TEXT = [
-  "Matt Shih — CS student & robotics tinkerer.",
-  "I build perception pipelines, embedded control, and creative demos.",
-  "Keyboard: Arrow keys / WASD control the demo. Type 'arm-demo' to try it.",
-];
-const PROJECTS_TEXT = [
-  "- Rebottle — Android / Kotlin + Firebase: QR bottle tracking app",
-  "- Ouster LiDAR integration — ROS2 driver & RViz visualization",
-  "- CTF challenges — reverse/forensics/crypto practice",
-  "(Replace these entries with your own projects.)",
-];
-const EXPERIENCE_TEXT = [
-  "- Research Intern — Autonomy Lab (sensors & mapping)",
-  "- TA — Distributed Systems",
-  "- Robotics Club — Team lead for manipulation module",
-];
-
-// ==================== Robotic Arm Demo =====================
-// 3 segments, base at bottom-left-ish. Keyboard controls rotate joints.
-const arm = {
-  base: {x: 220, y: canvas.height/DPR - 140},
-  lengths: [140, 110, 70],
-  angles: [ -Math.PI/6, Math.PI/4, -Math.PI/8], // radians
-  angleSpeeds: [0,0,0],
-  grip: false,
-  held: null,
-};
-
-// One movable block and target zone
-let block = {x: 520, y: canvas.height/DPR - 200, size: 26, grabbed:false};
-let target = {x: canvas.width/DPR - 180, y: canvas.height/DPR - 160, w:80, h:80};
-
-// Controls mapping
-const controls = {
-  baseLeft: ['q'], // rotate base left
-  baseRight: ['e'],
-  joint0Left: ['ArrowLeft','a'],
-  joint0Right: ['ArrowRight','d'],
-  joint1Left: ['ArrowUp','w'],
-  joint1Right: ['ArrowDown','s'],
-  gripToggle: [' '], // space
-  reset: ['r']
-};
-const pressed = {};
-
-window.addEventListener('keydown', (ev)=>{
-  if(mode === 'terminal') handleTerminalKeyDown(ev);
-  else handleArmKeyDown(ev);
-});
-window.addEventListener('keyup', (ev)=>{
-  pressed[ev.key] = false;
-});
-
-// Terminal keyboard handling
-function handleTerminalKeyDown(ev){
-  if(ev.key === 'Backspace'){
-    term.input = term.input.slice(0,-1);
-    ev.preventDefault();
-  } else if(ev.key === 'Enter'){
-    const cmd = term.input.trim();
-    if(cmd.length>0){ term.history.push(cmd); term.histCursor = -1; }
-    pushLine(term.prompt + term.input);
-    processCommand(cmd);
-    term.input = '';
-    ev.preventDefault();
-  } else if(ev.key === 'ArrowUp'){
-    if(term.history.length>0){
-      if(term.histCursor < term.history.length-1) term.histCursor++;
-      term.input = term.history[term.history.length-1-term.histCursor] || '';
-    }
-    ev.preventDefault();
-  } else if(ev.key === 'ArrowDown'){
-    if(term.histCursor > 0){ term.histCursor--; term.input = term.history[term.history.length-1-term.histCursor]; }
-    else { term.histCursor = -1; term.input = ''; }
-    ev.preventDefault();
-  } else if(ev.key.length === 1){
-    // printable
-    term.input += ev.key;
-    ev.preventDefault();
-  } else if(ev.key === 'Tab'){
-    // simple autocomplete: 'a' -> about, 'p'->projects, 'x'->experience
-    ev.preventDefault();
-    const candidates = ['about','projects','experience','arm-demo','help','clear','resume'];
-    const match = candidates.find(c=>c.startsWith(term.input));
-    if(match) term.input = match;
-  }
+function toggleBlock(header) {
+  header.querySelector('.toggle-arrow').classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
 }
-
-function processCommand(cmd){
-  const c = cmd.toLowerCase();
-  if(c === '') { pushLine(''); return; }
-  if(c === 'help'){
-    pushLine("Available: help, about, projects, experience, arm-demo, resume, clear");
-    pushLine("Type 'arm-demo' to launch the robotic arm simulation.");
-    return;
-  }
-  if(c === 'about'){
-    ABOUT_TEXT.forEach(l=>pushLine(l));
-    return;
-  }
-  if(c === 'projects'){
-    PROJECTS_TEXT.forEach(l=>pushLine(l));
-    return;
-  }
-  if(c === 'experience'){
-    EXPERIENCE_TEXT.forEach(l=>pushLine(l));
-    return;
-  }
-  if(c === 'resume'){
-    pushLine('Resume: [placeholder] — add your resume URL in the HTML file.');
-    return;
-  }
-  if(c === 'clear'){
-    term.lines = [];
-    return;
-  }
-  if(c === 'arm-demo' || c === 'arm'){
-    pushLine('Switching to arm demo. Use Arrow keys or WASD to move joints. Space to toggle grip. Press `t` to return to terminal.');
-    mode = 'arm';
-    return;
-  }
-  if(c === 'theme'){
-    pushLine('Theme switching not implemented in this demo — edit CSS to customize.');
-    return;
-  }
-  pushLine("Unknown command: '"+cmd+"'. Type 'help' for commands.");
-}
-
-// Arm keyboard handling
-function handleArmKeyDown(ev){
-  pressed[ev.key] = true;
-  if(ev.key === 't'){
-    mode = 'terminal';
-    pushLine('Returned to terminal.');
-  }
-  // prevent page scrolling on arrows/space
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(ev.key)) ev.preventDefault();
-}
-
-// Utility: draw rounded rect
-function roundRect(x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
-
-// Render loop
-let last = performance.now();
-function tick(now){
-  const dt = Math.min(0.05,(now-last)/1000);
-  last = now;
-  update(dt);
-  render();
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
-
-function update(dt){
-  if(mode === 'arm'){
-    // read pressed keys and update angles
-    const speed = 1.8; // rad/s
-    // joint0: base rotation
-    if(pressed['ArrowLeft'] || pressed['a']) arm.angles[0] -= speed * dt;
-    if(pressed['ArrowRight']|| pressed['d']) arm.angles[0] += speed * dt;
-    // joint1: second joint
-    if(pressed['ArrowUp'] || pressed['w']) arm.angles[1] -= speed * dt;
-    if(pressed['ArrowDown']|| pressed['s']) arm.angles[1] += speed * dt;
-    // joint2: q/e
-    if(pressed['q']) arm.angles[2] -= speed * dt;
-    if(pressed['e']) arm.angles[2] += speed * dt;
-    // grip toggle
-    if(pressed[' '] && !arm._spaceLock){ arm.grip = !arm.grip; arm._spaceLock = true; }
-    if(!pressed[' ']) arm._spaceLock = false;
-    // reset
-    if(pressed['r']){
-      arm.angles = [-Math.PI/6, Math.PI/4, -Math.PI/8];
-      block = {x: 520, y: canvas.height/DPR - 200, size: 26, grabbed:false};
-    }
-    // enforce reasonable angle limits
-    arm.angles[1] = Math.max(-Math.PI*0.9, Math.min(Math.PI*0.9, arm.angles[1]));
-    arm.angles[2] = Math.max(-Math.PI*0.9, Math.min(Math.PI*0.9, arm.angles[2]));
-    // forward kinematics: compute end effector
-    const p0 = {x:arm.base.x, y:arm.base.y};
-    const a0 = arm.angles[0];
-    const p1 = {x: p0.x + Math.cos(a0)*arm.lengths[0], y: p0.y + Math.sin(a0)*arm.lengths[0]};
-    const a1 = a0 + arm.angles[1];
-    const p2 = {x: p1.x + Math.cos(a1)*arm.lengths[1], y: p1.y + Math.sin(a1)*arm.lengths[1]};
-    const a2 = a1 + arm.angles[2];
-    const gripPos = {x: p2.x + Math.cos(a2)*arm.lengths[2], y: p2.y + Math.sin(a2)*arm.lengths[2]};
-    arm._points = [p0,p1,p2,gripPos];
-    // interaction: if grip on and block near gripPos, attach
-    const dist = Math.hypot(block.x - gripPos.x, block.y - gripPos.y);
-    if(arm.grip && dist < 28 && !block.grabbed){ block.grabbed = true; arm.held = block; }
-    if(!arm.grip && block.grabbed){ block.grabbed = false; arm.held = null; }
-    if(block.grabbed && arm.held){ arm.held.x = gripPos.x; arm.held.y = gripPos.y; }
-    // check success
-    if(block.x > target.x && block.x < target.x+target.w && block.y > target.y && block.y < target.y+target.h){
-      // simple success: nudge target color or show message
-      arm._success = true;
-    } else arm._success = false;
-  }
-}
-
-function render(){
-  // clear
-  ctx.fillStyle = theme.bg;
-  ctx.fillRect(0,0,canvas.width/DPR,canvas.height/DPR);
-
-  // draw a centered panel card
-  const pad = 28;
-  const panelW = Math.min(1180, canvas.width/DPR - 80);
-  const panelH = Math.min(720, canvas.height/DPR - 80);
-  const panelX = (canvas.width/DPR - panelW)/2;
-  const panelY = (canvas.height/DPR - panelH)/2;
-
-  // panel background
-  ctx.fillStyle = theme.panel;
-  roundRect(panelX, panelY, panelW, panelH, 12);
-  ctx.fill();
-
-  if(mode === 'terminal'){
-    renderTerminal(panelX+24, panelY+24, panelW-48, panelH-48);
-  } else if(mode === 'arm'){
-    renderArmDemo(panelX+24, panelY+24, panelW-48, panelH-48);
-  }
-
-  // subtle footer: small hint
-  ctx.fillStyle = 'rgba(255,255,255,0.03)';
-  ctx.fillRect(panelX, panelY+panelH-38, panelW, 1);
-  ctx.fillStyle = theme.dim;
-  ctx.font = '12px Inter, ui-sans-serif, system-ui';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Type `help` in the terminal. Press `t` while in demo to return.', panelX+18, panelY+panelH-20);
-}
-
-function renderTerminal(x,y,w,h){
-  // terminal area: dark inner background
-  ctx.fillStyle = '#060708';
-  roundRect(x,y,w,h,8);
-  ctx.fill();
-
-  // Title row
-  ctx.font = '600 15px Inter, ui-sans-serif';
-  ctx.fillStyle = theme.accent;
-  ctx.fillText('matt.shih — interactive terminal', x+14, y+24);
-
-  // content area
-  const contentX = x+14;
-  let cursorY = y+48;
-  const lineHeight = 20;
-  ctx.font = '13px Inter, ui-sans-serif';
-  // draw previous lines
-  ctx.fillStyle = theme.text;
-  const maxShow = Math.floor((h-80)/lineHeight);
-  const start = Math.max(0, term.lines.length - maxShow);
-  for(let i=start;i<term.lines.length;i++){
-    const line = term.lines[i];
-    ctx.fillStyle = theme.dim;
-    ctx.fillText(line, contentX, cursorY);
-    cursorY += lineHeight;
-  }
-  // draw prompt + input
-  ctx.fillStyle = theme.accent;
-  ctx.fillText(term.prompt, contentX, cursorY);
-  const promptW = ctx.measureText(term.prompt).width;
-  ctx.fillStyle = theme.text;
-  // clip input to fit width
-  const inputText = term.input || '';
-  ctx.fillText(inputText, contentX+promptW, cursorY);
-  // caret
-  const caretX = contentX + promptW + ctx.measureText(inputText).width + 2;
-  const caretY = cursorY - 14;
-  ctx.fillStyle = theme.caret;
-  ctx.fillRect(caretX, caretY+2, 10, 14);
-
-  // small help column on the right inside panel
-  const miniX = x + w - 180;
-  ctx.fillStyle = 'rgba(255,255,255,0.02)';
-  roundRect(miniX-8, y+40, 162, h-80, 8);
-  ctx.fill();
-  ctx.fillStyle = theme.dim;
-  ctx.font = '12px Inter, ui-sans-serif';
-  ctx.fillText('Commands', miniX+6, y+60);
-  ctx.fillStyle = theme.text;
-  const cmds = ['about','projects','experience','arm-demo','resume','clear','help'];
-  for(let i=0;i<cmds.length;i++){
-    ctx.fillStyle = theme.dim;
-    ctx.fillText(cmds[i], miniX+10, y+86 + i*18);
-  }
-}
-
-function renderArmDemo(x,y,w,h){
-  // left: arm scene; right: HUD
-  const sceneW = Math.floor(w*0.62);
-  const hudX = x + sceneW + 16;
-  // scene bg
-  ctx.fillStyle = '#071017';
-  roundRect(x, y, sceneW-6, h, 8);
-  ctx.fill();
-
-  // ground
-  ctx.fillStyle = '#061217';
-  roundRect(x+6, y + h - 80, sceneW-18, 68, 8);
-  ctx.fill();
-
-  // draw target
-  ctx.fillStyle = arm._success ? '#7ef5c7' : 'rgba(126,245,199,0.2)';
-  roundRect(target.x-12, target.y-12, target.w+24, target.h+24, 8);
-  ctx.fill();
-  ctx.fillStyle = '#0c1214';
-  roundRect(target.x, target.y, target.w, target.h, 6);
-  ctx.fill();
-  ctx.fillStyle = theme.dim;
-  ctx.font = '12px Inter, ui-sans-serif';
-  ctx.fillText('Target', target.x+8, target.y+18);
-
-  // draw block
-  ctx.save();
-  ctx.translate(block.x, block.y);
-  ctx.rotate(0.06*Math.sin(performance.now()/300));
-  ctx.fillStyle = '#ffd68a';
-  roundRect(-block.size/2, -block.size/2, block.size, block.size, 4);
-  ctx.fill();
-  ctx.restore();
-
-  // draw arm using FK points
-  const pts = arm._points || [];
-  // draw segments
-  ctx.lineWidth = 12;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = '#bfeee0';
-  if(pts.length){
-    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[1].x, pts[1].y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(pts[1].x, pts[1].y); ctx.lineTo(pts[2].x, pts[2].y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(pts[2].x, pts[2].y); ctx.lineTo(pts[3].x, pts[3].y); ctx.stroke();
-  }
-  // joints
-  for(let i=0;i<pts.length;i++){
-    ctx.beginPath(); ctx.fillStyle = '#0c1214'; roundRect(pts[i].x-10, pts[i].y-10, 20, 20, 6); ctx.fill();
-    ctx.beginPath(); ctx.strokeStyle = theme.accent; ctx.lineWidth = 2; ctx.arc(pts[i].x, pts[i].y, 12, 0, Math.PI*2); ctx.stroke();
-  }
-  // gripper
-  if(pts.length){
-    const g = pts[3];
-    const gripSize = arm.grip ? 18 : 8;
-    ctx.beginPath(); ctx.fillStyle = arm.grip ? '#7ef5c7' : '#98a0a6'; roundRect(g.x-gripSize/2, g.y-6, gripSize, 12, 4); ctx.fill();
-  }
-
-  // draw base
-  ctx.fillStyle = '#0f1416'; roundRect(arm.base.x-28, arm.base.y-6, 56, 36, 8); ctx.fill();
-
-  // HUD on right
-  ctx.fillStyle = '#061015'; roundRect(hudX-6, y, w-sceneW-8, h, 8); ctx.fill();
-  ctx.fillStyle = theme.accent; ctx.font = '600 15px Inter, ui-sans-serif'; ctx.fillText('Robotic Arm Demo', hudX+12, y+34);
-  ctx.fillStyle = theme.dim; ctx.font = '12px Inter, ui-sans-serif';
-  ctx.fillText('Controls:', hudX+12, y+64);
-  ctx.fillStyle = theme.text; ctx.fillText('Arrow keys / WASD — rotate joints', hudX+12, y+86);
-  ctx.fillText('Q / E — fine rotate end joint', hudX+12, y+106);
-  ctx.fillText('Space — toggle grip', hudX+12, y+126);
-  ctx.fillText('R — reset', hudX+12, y+146);
-  ctx.fillText('T — return to terminal', hudX+12, y+166);
-
-  // show angles
-  ctx.fillStyle = theme.dim; ctx.fillText('Joint angles (deg):', hudX+12, y+200);
-  ctx.fillStyle = theme.text; ctx.fillText((arm.angles[0]*180/Math.PI).toFixed(1), hudX+12, y+222);
-  ctx.fillText((arm.angles[1]*180/Math.PI).toFixed(1), hudX+12, y+242);
-  ctx.fillText((arm.angles[2]*180/Math.PI).toFixed(1), hudX+12, y+262);
-
-  // success message
-  if(arm._success){
-    ctx.fillStyle = '#7ef5c7'; ctx.font = '600 18px Inter, ui-sans-serif'; ctx.fillText('Block delivered! Nice.', hudX+12, y+320);
-  }
-}
-
-// Initialize a few things for first frame
-(function init(){
-  // adjust arm base in case of resize
-  arm.base = {x: 220, y: canvas.height/DPR - 140};
-})();
-
-// Capture focus for keyboard input
-canvas.tabIndex = 1000; // allow canvas to receive keyboard
-canvas.style.outline = 'none';
-canvas.addEventListener('click', ()=>{ canvas.focus(); });
-canvas.focus();
-
 </script>
 </body>
 </html>
