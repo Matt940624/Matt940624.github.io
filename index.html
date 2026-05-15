@@ -218,9 +218,194 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
   .skills-grid { grid-template-columns: 1fr; }
   .demo-grid { grid-template-columns: 1fr; }
 }
+
+/* ════════════════════════════════════════
+   ENHANCEMENTS — terminal, cursor, mesh, tilt
+   ════════════════════════════════════════ */
+
+/* Scroll progress bar */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: linear-gradient(90deg, var(--blue), #6eb5ff);
+  z-index: 1001; width: 0%;
+  box-shadow: 0 0 10px rgba(0,113,227,0.5);
+  transition: width 0.08s linear;
+}
+
+/* Cursor follower */
+.cursor-dot, .cursor-ring {
+  position: fixed; top: 0; left: 0; pointer-events: none;
+  transform: translate(-50%, -50%); opacity: 0; will-change: transform;
+}
+.cursor-dot {
+  width: 6px; height: 6px; border-radius: 51%;
+  background: var(--blue); mix-blend-mode: difference;
+  z-index: 9999; transition: opacity 0.2s ease, background 0.2s ease;
+}
+.cursor-ring {
+  width: 36px; height: 36px; border: 1.5px solid rgba(0,113,227,0.45);
+  border-radius: 50%; z-index: 9998;
+  transition: width 0.22s ease, height 0.22s ease, border-color 0.22s ease, background 0.22s ease, opacity 0.2s ease;
+}
+.cursor-ring.is-hover { width: 60px; height: 60px; border-color: rgba(0,113,227,0.7); background: rgba(0,113,227,0.06); }
+.cursor-dot.is-hover  { background: #fff; }
+@media (hover: none), (max-width: 900px) {
+  .cursor-dot, .cursor-ring { display: none; }
+}
+
+/* Hero — animated mesh blobs */
+.hero-mesh { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.mesh-blob {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.55;
+  animation: meshFloat 22s ease-in-out infinite;
+  will-change: transform;
+}
+.mesh-blob.b1 { width: 480px; height: 480px; background: rgba(0,113,227,0.38); top: -120px; left: -80px; }
+.mesh-blob.b2 { width: 400px; height: 400px; background: rgba(110,181,255,0.42); top: 38%; right: -80px; animation-delay: -7s; }
+.mesh-blob.b3 { width: 320px; height: 320px; background: rgba(0,180,160,0.28); bottom: -80px; left: 28%; animation-delay: -14s; }
+.hero > *:not(.hero-mesh) { position: relative; z-index: 1; }
+@keyframes meshFloat {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(60px, 50px) scale(1.12); }
+  66% { transform: translate(-40px, 70px) scale(0.92); }
+}
+
+/* Bento tilt + shine */
+.bento-card { transform-style: preserve-3d; will-change: transform; }
+.tilt-shine {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.16), transparent 60%);
+  opacity: 0; transition: opacity 0.25s;
+}
+.bento-card:hover .tilt-shine { opacity: 1; }
+.card-featured .tilt-shine { background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.22), transparent 60%); }
+
+/* Terminal launcher */
+.terminal-launcher {
+  position: fixed; bottom: 28px; right: 28px; z-index: 900;
+  width: 56px; height: 56px; border-radius: 50%; border: none;
+  background: var(--black); color: var(--white); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.06);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, opacity 0.2s ease;
+  animation: launcherPulse 2.6s ease-in-out infinite;
+}
+.terminal-launcher:hover { transform: translateY(-3px) scale(1.06); box-shadow: 0 16px 44px rgba(0,113,227,0.5), inset 0 0 0 1px rgba(255,255,255,0.1); animation: none; }
+.terminal-launcher::after {
+  content: 'Press ' attr(data-shortcut); position: absolute; right: 68px; top: 50%;
+  background: var(--black); color: var(--white);
+  padding: 7px 12px; border-radius: 8px; font-size: 11px;
+  font-family: var(--font); font-weight: 500; white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transform: translateY(-50%) translateX(6px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.terminal-launcher:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+body.term-open .terminal-launcher { opacity: 0; transform: scale(0.6); pointer-events: none; }
+@keyframes launcherPulse {
+  0%, 100% { box-shadow: 0 12px 36px rgba(0,0,0,0.3), 0 0 0 0 rgba(0,113,227,0.45); }
+  50%      { box-shadow: 0 12px 36px rgba(0,0,0,0.3), 0 0 0 14px rgba(0,113,227,0); }
+}
+
+/* Terminal — mac-style */
+.term-overlay {
+  position: fixed; inset: 0; z-index: 1100;
+  background: rgba(15,15,20,0.55);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0.22s;
+}
+.term-overlay.is-open { opacity: 1; visibility: visible; }
+
+.terminal {
+  width: min(720px, 90vw); height: min(460px, 75vh);
+  background: rgba(36, 36, 40, 0.94);
+  border-radius: 11px;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  font-family: ui-monospace, 'SF Mono', Monaco, Menlo, monospace;
+  transform: scale(0.95) translateY(20px); opacity: 0;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+  min-width: 420px; min-height: 280px;
+  position: relative;
+}
+.term-overlay.is-open .terminal { transform: scale(1) translateY(0); opacity: 1; }
+.terminal.is-max { width: 96vw !important; height: 92vh !important; }
+
+.terminal-header {
+  display: flex; align-items: center; padding: 10px 14px;
+  background: linear-gradient(180deg, #3a3a3e, #2c2c30);
+  border-bottom: 1px solid rgba(0,0,0,0.4);
+  cursor: grab; user-select: none; flex-shrink: 0;
+}
+.terminal-header:active { cursor: grabbing; }
+.traffic-lights { display: flex; gap: 8px; align-items: center; }
+.tl {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: none; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; color: rgba(0,0,0,0.55); font-weight: 700; line-height: 1;
+  box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.18);
+}
+.tl-red    { background: #ff5f57; }
+.tl-yellow { background: #febc2e; }
+.tl-green  { background: #28c840; }
+.tl span { opacity: 0; transition: opacity 0.15s; }
+.traffic-lights:hover .tl span { opacity: 1; }
+
+.terminal-title {
+  flex: 1; text-align: center; font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.55); letter-spacing: 0.01em;
+  font-family: var(--font);
+}
+
+.terminal-body {
+  flex: 1; padding: 14px 16px; overflow-y: auto;
+  color: rgba(255,255,255,0.92); font-size: 13px; line-height: 1.55;
+  background: rgba(20,20,22,0.42);
+}
+.terminal-body::-webkit-scrollbar { width: 10px; }
+.terminal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 5px; }
+.terminal-body::-webkit-scrollbar-track { background: transparent; }
+
+.term-line { white-space: pre-wrap; word-break: break-word; font-family: inherit; }
+.term-line.dim  { color: rgba(255,255,255,0.45); }
+.term-line.ok   { color: #28c840; }
+.term-line.warn { color: #febc2e; }
+.term-line.err  { color: #ff5f57; }
+.term-line.acc  { color: #6eb5ff; font-weight: 600; }
+.term-line a    { color: #6eb5ff; text-decoration: none; border-bottom: 1px dotted rgba(110,181,255,0.4); }
+.term-line a:hover { color: #a3d0ff; }
+.term-line strong { color: #fff; font-weight: 600; }
+
+.term-prompt-line { display: flex; align-items: baseline; }
+.term-prompt { flex-shrink: 0; margin-right: 8px; }
+.term-prompt .user { color: #28c840; }
+.term-prompt .at   { color: rgba(255,255,255,0.6); }
+.term-prompt .host { color: #28c840; }
+.term-prompt .path { color: #6eb5ff; }
+.term-prompt .sym  { color: rgba(255,255,255,0.7); }
+.term-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: rgba(255,255,255,0.95); font: inherit;
+  caret-color: #6eb5ff;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .mesh-blob, .terminal-launcher { animation: none !important; }
+  * { transition-duration: 0.01ms !important; }
+}
 </style>
 </head>
 <body>
+
+<!-- Scroll progress + custom cursor -->
+<div class="scroll-progress"></div>
+<div class="cursor-ring"></div>
+<div class="cursor-dot"></div>
 
 <nav>
   <div class="nav-inner">
@@ -237,6 +422,11 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
 
 <!-- HERO -->
 <section class="hero">
+  <div class="hero-mesh">
+    <div class="mesh-blob b1"></div>
+    <div class="mesh-blob b2"></div>
+    <div class="mesh-blob b3"></div>
+  </div>
   <div class="hero-eyebrow">Robotics · Autonomy · Machine Learning · Systems</div>
   <h1 class="hero-name">Min<span>&#8209;</span>Hong<br><span>Shih</span></h1>
   <p class="hero-tagline">Building robots that learn to navigate, manipulate,<br>and interact with the physical world.</p>
@@ -660,19 +850,485 @@ footer { background: var(--off-white); border-top: 1px solid rgba(0,0,0,0.08); p
   </div>
 </footer>
 
+<!-- ═══ TERMINAL ═══ -->
+<button class="terminal-launcher" id="termLauncher" aria-label="Open terminal" data-shortcut="⌘K">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="4 17 10 11 4 5"></polyline>
+    <line x1="12" y1="19" x2="20" y2="19"></line>
+  </svg>
+</button>
+
+<div class="term-overlay" id="termOverlay">
+  <div class="terminal" id="terminal">
+    <div class="terminal-header" id="termHeader">
+      <div class="traffic-lights">
+        <button class="tl tl-red"    data-action="close" aria-label="Close"><span>×</span></button>
+        <button class="tl tl-yellow" data-action="min"   aria-label="Minimize"><span>−</span></button>
+        <button class="tl tl-green"  data-action="max"   aria-label="Maximize"><span>+</span></button>
+      </div>
+      <div class="terminal-title">minhong@portfolio — zsh — 80×24</div>
+      <div style="width: 54px;"></div>
+    </div>
+    <div class="terminal-body" id="termBody"></div>
+  </div>
+</div>
+
 <script>
+/* Reveal on scroll (existing) */
 const observer = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
 }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
+/* Nav active section + scroll progress */
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('.nav-links a');
+const scrollBar = document.querySelector('.scroll-progress');
 window.addEventListener('scroll', () => {
   let current = '';
   sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
   navLinks.forEach(a => { a.style.color = a.getAttribute('href') === '#' + current ? '#1d1d1f' : ''; });
-});
+  const h = document.documentElement;
+  const pct = (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)) * 100;
+  scrollBar.style.width = pct + '%';
+}, { passive: true });
+
+/* Cursor follower */
+(function cursor() {
+  const dot = document.querySelector('.cursor-dot');
+  const ring = document.querySelector('.cursor-ring');
+  if (!dot || !ring) return;
+  let tx = 0, ty = 0, rx = 0, ry = 0, shown = false;
+  window.addEventListener('mousemove', (e) => {
+    tx = e.clientX; ty = e.clientY;
+    if (!shown) { shown = true; dot.style.opacity = 1; ring.style.opacity = 1; }
+    dot.style.transform = `translate(${tx}px, ${ty}px) translate(-50%, -50%)`;
+  });
+  (function tick() {
+    rx += (tx - rx) * 0.18;
+    ry += (ty - ry) * 0.18;
+    ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+    requestAnimationFrame(tick);
+  })();
+  const hoverSel = 'a, button, .pill, .bento-card, .skill-tag, .demo-item, .exp-item, .stat-item, .skill-group';
+  document.querySelectorAll(hoverSel).forEach(el => {
+    el.addEventListener('mouseenter', () => { dot.classList.add('is-hover'); ring.classList.add('is-hover'); });
+    el.addEventListener('mouseleave', () => { dot.classList.remove('is-hover'); ring.classList.remove('is-hover'); });
+  });
+  document.addEventListener('mouseleave', () => { dot.style.opacity = 0; ring.style.opacity = 0; });
+  document.addEventListener('mouseenter', () => { dot.style.opacity = 1; ring.style.opacity = 1; });
+})();
+
+/* Stat count-up */
+(function counters() {
+  const animate = (el) => {
+    const text = el.textContent.trim();
+    const match = text.match(/^(\d+(?:\.\d+)?)(.*)$/);
+    if (!match) return;
+    const target = parseFloat(match[1]);
+    const suffix = match[2];
+    const dur = 1200, start = performance.now();
+    const step = (t) => {
+      const p = Math.min((t - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const v = target * eased;
+      el.textContent = (Number.isInteger(target) ? Math.round(v) : v.toFixed(1)) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = text;
+    };
+    requestAnimationFrame(step);
+  };
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animate(e.target); obs.unobserve(e.target); } });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stat-num').forEach(s => obs.observe(s));
+})();
+
+/* Bento 3D tilt + shine */
+(function tilt() {
+  document.querySelectorAll('.bento-card').forEach(card => {
+    const shine = document.createElement('div');
+    shine.className = 'tilt-shine';
+    card.appendChild(shine);
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      const rx = (y - 0.5) * -5;
+      const ry = (x - 0.5) * 5;
+      card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+      shine.style.setProperty('--mx', (x * 100) + '%');
+      shine.style.setProperty('--my', (y * 100) + '%');
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+})();
+
+/* ═══════════ MAC TERMINAL ═══════════ */
+(function terminal() {
+  const overlay  = document.getElementById('termOverlay');
+  const term     = document.getElementById('terminal');
+  const body     = document.getElementById('termBody');
+  const header   = document.getElementById('termHeader');
+  const launcher = document.getElementById('termLauncher');
+
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+  launcher.setAttribute('data-shortcut', isMac ? '⌘K' : 'Ctrl+K');
+
+  let history = [], histIdx = -1;
+  let typingLock = false;
+  let firstOpen = true;
+
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  const promptHTML = () =>
+    `<span class="user">minhong</span><span class="at">@</span><span class="host">portfolio</span> <span class="path">~</span> <span class="sym">%</span>`;
+
+  function append(html, cls = '') {
+    const div = document.createElement('div');
+    div.className = 'term-line ' + cls;
+    div.innerHTML = html;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+    return div;
+  }
+
+  function appendPromptLine() {
+    const line = document.createElement('div');
+    line.className = 'term-line term-prompt-line';
+    line.innerHTML = `<span class="term-prompt">${promptHTML()}</span><input class="term-input" autocomplete="off" spellcheck="false" autocapitalize="off" />`;
+    body.appendChild(line);
+    const input = line.querySelector('.term-input');
+    input.addEventListener('keydown', onKey);
+    setTimeout(() => input.focus(), 10);
+    body.scrollTop = body.scrollHeight;
+    return input;
+  }
+
+  function freezeInput(input) {
+    const span = document.createElement('span');
+    span.textContent = input.value;
+    span.style.color = 'rgba(255,255,255,0.95)';
+    input.replaceWith(span);
+  }
+
+  async function typeOut(text, cls = '', speed = 14) {
+    typingLock = true;
+    const div = append('', cls);
+    for (let i = 0; i < text.length; i++) {
+      div.textContent += text[i];
+      await sleep(speed);
+      body.scrollTop = body.scrollHeight;
+    }
+    typingLock = false;
+    return div;
+  }
+
+  function onKey(e) {
+    if (typingLock) { e.preventDefault(); return; }
+    const input = e.target;
+    if (e.key === 'Enter') {
+      const val = input.value;
+      if (val.trim()) { history.unshift(val); histIdx = -1; }
+      freezeInput(input);
+      runCommand(val.trim());
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (histIdx < history.length - 1) histIdx++;
+      input.value = history[histIdx] || '';
+      setTimeout(() => input.setSelectionRange(input.value.length, input.value.length), 0);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (histIdx > 0) histIdx--; else { histIdx = -1; input.value = ''; return; }
+      input.value = history[histIdx] || '';
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const match = Object.keys(commands).filter(c => c.startsWith(input.value));
+      if (match.length === 1) input.value = match[0];
+      else if (match.length > 1) {
+        append(match.join('  '), 'dim');
+        const ln = document.createElement('div');
+        ln.className = 'term-line term-prompt-line';
+        ln.innerHTML = `<span class="term-prompt">${promptHTML()}</span>`;
+        const newInput = document.createElement('input');
+        newInput.className = 'term-input';
+        newInput.value = input.value;
+        newInput.addEventListener('keydown', onKey);
+        ln.appendChild(newInput);
+        body.appendChild(ln);
+        newInput.focus();
+        input.parentElement.querySelector('.term-input')?.remove();
+      }
+    } else if ((e.key === 'l' || e.key === 'L') && e.ctrlKey) {
+      e.preventDefault(); doClear();
+    } else if (e.key === 'c' && e.ctrlKey) {
+      e.preventDefault();
+      freezeInput(input);
+      append('^C', 'dim');
+      appendPromptLine();
+    }
+  }
+
+  function doClear() { body.innerHTML = ''; appendPromptLine(); }
+
+  const commands = {
+    help: () => {
+      const list = [
+        ['about',       'Who I am'],
+        ['projects',    'Research & engineering work'],
+        ['experience',  'Work history'],
+        ['skills',      'Technical stack'],
+        ['research',    'Publications'],
+        ['education',   'Schooling'],
+        ['contact',     'Get in touch'],
+        ['ls',          'List page sections'],
+        ['open <id>',   'Scroll to section'],
+        ['neofetch',    'System info'],
+        ['whoami',      'Current user'],
+        ['date',        'Today\'s date'],
+        ['echo <text>', 'Repeat text'],
+        ['sudo',        'Try it'],
+        ['clear',       'Clear terminal (or Ctrl+L)'],
+        ['exit',        'Close terminal (or Esc)'],
+      ];
+      append('Available commands:', 'acc');
+      list.forEach(([c, d]) => {
+        append(`  <span style="color:#28c840;">${c.padEnd(14)}</span><span class="dim">${d}</span>`);
+      });
+    },
+    about: () => {
+      append('Min-Hong Shih', 'acc');
+      append('Robotics Engineer · Northeastern University', 'dim');
+      append('');
+      append('B.S. Computer Science, Minor in Mathematics (2023–present).');
+      append('Undergraduate researcher @ <strong>NEU Autonomy & Intelligence Lab</strong>.');
+      append('Incoming SDE Intern @ <strong>Amazon Robotics</strong> (Summer 2026).');
+      append('');
+      append('I build robots that learn from physics — bridging learned models');
+      append('(differentiable simulators, neural ODEs, CNNs) with classical robotics');
+      append('pipelines (MPPI, ROS2, IK/FK).');
+      append('');
+      append('Type <span class="acc">projects</span> to see what I\'m working on.', 'dim');
+    },
+    projects: () => {
+      const items = [
+        ['Differentiable Physics Simulator', 'PyTorch · Isaac Sim · Neural ODEs · MPPI'],
+        ['LiDAR-to-BEV Neural Network',      'Point clouds · F1Tenth · ROS2 · C++'],
+        ['6-DOF Robotic Arm Simulation',     'Gazebo · ROS2 · IK/FK · USD Physics'],
+        ['Chip Inspection Pipeline',         'OpenCV · Python · C++ · 98% accuracy'],
+        ['Low-Latency Desktop App',          'C++ · Flutter · GDI+ · AWS'],
+      ];
+      append('Selected projects:', 'acc');
+      items.forEach(([t, s], i) => {
+        append(`  <span style="color:#28c840;">[${i+1}]</span> <strong>${t}</strong>`);
+        append(`      <span class="dim">${s}</span>`);
+      });
+      append('');
+      append('Run <span class="acc">open projects</span> to scroll to the full list.', 'dim');
+    },
+    experience: () => {
+      const items = [
+        ['Jun–Sep 2026', 'Amazon Robotics',           'SDE Intern (ML/AI) — Bellevue, WA',     'upcoming'],
+        ['Jun 2025–now', 'NEU Autonomy Lab',          'Undergrad Researcher — Boston, MA',     'current'],
+        ['Jul 2025–now', 'Stealth Startup',           'Systems SWE Intern — Boston, MA',       ''],
+        ['Jul–Dec 2025', 'Zilliant',                  'Software Engineer Co-op — Austin, TX',  ''],
+        ['May–Aug 2023', 'Trillion-Sr International', 'Robotics SWE Intern — Tainan, Taiwan',  ''],
+      ];
+      append('Career timeline:', 'acc');
+      items.forEach(([d, c, r, tag]) => {
+        const badge = tag === 'upcoming' ? ' <span class="warn">[upcoming]</span>'
+                    : tag === 'current'  ? ' <span class="ok">[current]</span>' : '';
+        append(`  <span style="color:#febc2e;">${d.padEnd(13)}</span><strong>${c}</strong>${badge}`);
+        append(`                <span class="dim">${r}</span>`);
+      });
+    },
+    skills: () => {
+      const groups = {
+        'Languages':           'Python · C++ · C · Bash · TypeScript · Dart · Verilog',
+        'Robotics':            'ROS2 · Isaac Sim · IsaacLab · Nav2 · F1Tenth',
+        'Control & Planning':  'MPPI · PID · Motion Planning · IK · Trajectory Opt.',
+        'Machine Learning':    'PyTorch · Neural ODEs · CNNs · Diff. Physics · CUDA',
+        'Infra':               'Docker · Linux · AWS · NVIDIA Jetson · Git · HDF5',
+        'Math':                'Dynamical Systems · Linear Algebra · Probability',
+      };
+      append('Stack:', 'acc');
+      Object.entries(groups).forEach(([k, v]) => {
+        append(`  <span style="color:#28c840;">${k.padEnd(20)}</span><span class="dim">${v}</span>`);
+      });
+    },
+    contact: () => {
+      append('Get in touch:', 'acc');
+      append('  email     <a href="mailto:minhongshih@gmail.com">minhongshih@gmail.com</a>');
+      append('  phone     <a href="tel:6174854168">+1 (617) 485-4168</a>');
+      append('  linkedin  <a href="https://linkedin.com/in/minhong-shih-neu" target="_blank">/in/minhong-shih-neu</a>');
+      append('  github    <a href="https://github.com/matt" target="_blank">@matt</a>');
+      append('  location  Boston, MA');
+    },
+    research: () => {
+      append('Publications:', 'acc');
+      append('  <strong>Habitat Modeling Using CNNs and Tabular Environmental Data</strong>');
+      append('  <span class="dim">Co-authored · Northeastern University · 2024–25</span>');
+      append('  <a href="https://arxiv.org/abs/2507.10993" target="_blank">arxiv.org/abs/2507.10993</a>');
+    },
+    education: () => {
+      append('Northeastern University', 'acc');
+      append('  B.S. Computer Science · Minor in Mathematics');
+      append('  Sep 2023 – Present · Boston, MA');
+      append('');
+      append('  Coursework: robotics, ML, dynamical systems, systems programming,', 'dim');
+      append('  FPGA design, computer vision, control theory, formal languages.', 'dim');
+    },
+    ls: () => {
+      append('Sections:', 'acc');
+      ['projects', 'demos', 'experience', 'skills', 'education'].forEach(s => {
+        append(`  <span style="color:#6eb5ff;">#${s}</span>`);
+      });
+      append('Try <span class="acc">open projects</span>', 'dim');
+    },
+    open: (args) => {
+      const id = (args[0] || '').toLowerCase();
+      const valid = ['projects', 'demos', 'experience', 'skills', 'education'];
+      if (!valid.includes(id)) {
+        append(`open: unknown section '${id || '(none)'}'`, 'err');
+        append('try one of: ' + valid.join(', '), 'dim');
+        return false;
+      }
+      const target = document.getElementById(id);
+      if (target) {
+        append(`scrolling to #${id}…`, 'ok');
+        setTimeout(() => { closeTerminal(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+        return true;
+      }
+      return false;
+    },
+    whoami: () => append('min-hong'),
+    date:   () => append(new Date().toString()),
+    echo:   (args) => append(args.join(' ') || ''),
+    sudo:   () => {
+      append('Sorry, user min-hong is not in the sudoers file.', 'err');
+      append('This incident will be reported.', 'dim');
+    },
+    clear:  () => doClear(),
+    cls:    () => doClear(),
+    exit:   () => { closeTerminal(); },
+    rm:     () => append('rm: refusing to remove a portfolio file', 'err'),
+    cd:     () => {},
+    neofetch: () => {
+      const lines = [
+        ['        .--.        ', '<span class="acc">minhong@portfolio</span>'],
+        ['       |o_o |       ', '<span class="dim">-----------------</span>'],
+        ['       |:_/ |       ', '<span class="warn">OS:</span>       macOS Sequoia (web)'],
+        ['      //   \\ \\      ', '<span class="warn">Shell:</span>    zsh 5.9'],
+        ['     (|     | )     ', '<span class="warn">Role:</span>     Robotics Engineer'],
+        ['    /\'\\_   _/`\\    ', '<span class="warn">School:</span>   Northeastern University'],
+        ['    \\___)=(___/     ', '<span class="warn">Lab:</span>      NEU Autonomy & Intelligence'],
+        ['                    ', '<span class="warn">Next:</span>     Amazon Robotics (Summer 2026)'],
+        ['                    ', '<span class="warn">Stack:</span>    ROS2 · PyTorch · Isaac Sim'],
+        ['                    ', '<span class="warn">Loc:</span>      Boston, MA'],
+      ];
+      lines.forEach(([a, b]) => append(`<span style="color:#6eb5ff;">${a}</span>${b}`));
+    },
+  };
+
+  function runCommand(input) {
+    if (!input) { appendPromptLine(); return; }
+    const [cmd, ...args] = input.split(/\s+/);
+    const fn = commands[cmd];
+    let suppressPrompt = false;
+    if (fn) {
+      const r = fn(args);
+      if (cmd === 'open' && r === true) suppressPrompt = true;
+      if (cmd === 'exit') suppressPrompt = true;
+      if (cmd === 'clear' || cmd === 'cls') suppressPrompt = true;
+    } else {
+      append(`zsh: command not found: ${cmd}`, 'err');
+      append('type <span class="acc">help</span> for available commands.', 'dim');
+    }
+    if (!suppressPrompt) appendPromptLine();
+  }
+
+  async function welcome() {
+    body.innerHTML = '';
+    const now = new Date().toString().replace(/\sGMT.*/, '');
+    append(`Last login: ${now} on console`, 'dim');
+    await sleep(220);
+    await typeOut('Welcome to minhong@portfolio', 'acc', 22);
+    await sleep(120);
+    append('');
+    append('Type <span class="acc">help</span> for commands, <span class="acc">about</span> for an intro, or <span class="acc">neofetch</span> for fun.', 'dim');
+    append('');
+    appendPromptLine();
+  }
+
+  function openTerminal() {
+    term.style.position = '';
+    term.style.left = ''; term.style.top = ''; term.style.margin = '';
+    overlay.classList.add('is-open');
+    document.body.classList.add('term-open');
+    document.body.style.overflow = 'hidden';
+    if (firstOpen) { firstOpen = false; welcome(); }
+    else {
+      const input = body.querySelector('.term-input');
+      if (input) input.focus(); else appendPromptLine();
+    }
+  }
+  function closeTerminal() {
+    overlay.classList.remove('is-open');
+    document.body.classList.remove('term-open');
+    document.body.style.overflow = '';
+  }
+
+  launcher.addEventListener('click', openTerminal);
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      overlay.classList.contains('is-open') ? closeTerminal() : openTerminal();
+    } else if (e.key === 'Escape' && overlay.classList.contains('is-open')) {
+      closeTerminal();
+    }
+  });
+
+  term.querySelectorAll('.tl').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const a = btn.dataset.action;
+      if (a === 'close' || a === 'min') closeTerminal();
+      else if (a === 'max') term.classList.toggle('is-max');
+    });
+  });
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeTerminal(); });
+
+  body.addEventListener('click', () => {
+    const input = body.querySelector('.term-input');
+    if (input) input.focus();
+  });
+
+  /* Drag terminal by header */
+  (function drag() {
+    let active = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    header.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.tl')) return;
+      active = true;
+      const r = term.getBoundingClientRect();
+      ox = r.left; oy = r.top;
+      sx = e.clientX; sy = e.clientY;
+      term.style.position = 'fixed';
+      term.style.left = ox + 'px';
+      term.style.top  = oy + 'px';
+      term.style.margin = '0';
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!active) return;
+      const nx = ox + (e.clientX - sx);
+      const ny = oy + (e.clientY - sy);
+      term.style.left = Math.max(0, Math.min(window.innerWidth - 100, nx)) + 'px';
+      term.style.top  = Math.max(0, Math.min(window.innerHeight - 40, ny)) + 'px';
+    });
+    window.addEventListener('mouseup', () => active = false);
+  })();
+})();
 </script>
 </body>
 </html>
